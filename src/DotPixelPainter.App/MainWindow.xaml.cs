@@ -20,29 +20,23 @@ namespace DotPixelPainter;
 
 public sealed partial class MainWindow : Window
 {
-    private static readonly uint[] PaletteColors =
-    [
-        0xFF000000, 0xFFFFFFFF, 0xFF7F7F7F, 0xFFE53935, 0xFFFB8C00,
-        0xFFFDD835, 0xFF43A047, 0xFF1E88E5, 0xFF8E24AA, 0xFF6D4C41,
-    ];
-
     private static readonly Color GridColor = Color.FromArgb(110, 64, 64, 64);
     private static readonly Color FrameColor = Color.FromArgb(255, 96, 96, 96);
 
     private readonly StartupProbe _probe;
     private readonly Dictionary<TabViewItem, DocumentTab> _tabs = [];
-    private readonly List<Button> _swatchButtons = [];
 
     private CanvasBitmap? _bitmap;
     private DocumentTab? _bitmapOwner;
     private CanvasImageBrush? _checker;
     private byte[] _pixelBuffer = [];
-    private uint _color = 0xFF000000;
     private int _untitledCount;
     private bool _firstFrameReported;
     private bool _forceClose;
 
     private DragMode _drag;
+    private PixelStroke? _stroke;
+    private DocumentTab? _strokeTab;
     private uint _paintColor;
     private int _lastX;
     private int _lastY;
@@ -63,7 +57,7 @@ public sealed partial class MainWindow : Window
         Root.Loaded += (_, _) => UpdateTitleBarInset();
         Root.SizeChanged += (_, _) => UpdateTitleBarInset();
 
-        BuildSwatches();
+        InitializePalette();
         AddKeyboardShortcuts();
         AddTab(CreateUntitled());
     }
@@ -164,7 +158,12 @@ public sealed partial class MainWindow : Window
     private async void Tabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args) =>
         await CloseTabAsync((TabViewItem)args.Tab);
 
-    private void Tabs_SelectionChanged(object sender, SelectionChangedEventArgs e) => RedrawAll();
+    private void Tabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        EndStroke();
+        RedrawAll();
+        UpdateUndoButtons();
+    }
 
     private void UpdateTitleBarInset()
     {
@@ -198,45 +197,11 @@ public sealed partial class MainWindow : Window
 
     // ---- ツールバー ----
 
-    private void BuildSwatches()
-    {
-        foreach (uint argb in PaletteColors)
-        {
-            var button = new Button
-            {
-                Width = 24,
-                Height = 24,
-                Padding = new Thickness(0),
-                Background = new SolidColorBrush(ToColor(argb)),
-                Tag = argb,
-            };
-            ToolTipService.SetToolTip(button, $"#{argb & 0xFFFFFF:X6}");
-            button.Click += (s, _) =>
-            {
-                _color = (uint)((Button)s).Tag;
-                UpdateSwatchSelection();
-            };
-            _swatchButtons.Add(button);
-            Swatches.Children.Add(button);
-        }
-
-        UpdateSwatchSelection();
-    }
-
-    private void UpdateSwatchSelection()
-    {
-        foreach (Button b in _swatchButtons)
-        {
-            bool selected = (uint)b.Tag == _color;
-            b.BorderThickness = new Thickness(selected ? 3 : 1);
-            b.BorderBrush = selected
-                ? (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"]
-                : (Brush)Application.Current.Resources["ControlStrokeColorDefaultBrush"];
-        }
-    }
-
     private void AddKeyboardShortcuts()
     {
+        AddShortcut(VirtualKey.Z, VirtualKeyModifiers.Control, Undo);
+        AddShortcut(VirtualKey.Y, VirtualKeyModifiers.Control, Redo);
+        AddShortcut(VirtualKey.Z, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, Redo);
         AddShortcut(VirtualKey.N, VirtualKeyModifiers.Control, () => AddTab(CreateUntitled()));
         AddShortcut(VirtualKey.O, VirtualKeyModifiers.Control, () => _ = OpenAsync());
         AddShortcut(VirtualKey.S, VirtualKeyModifiers.Control, () => _ = SaveCurrentAsync());
@@ -273,6 +238,46 @@ public sealed partial class MainWindow : Window
     private void ZoomOut_Click(object sender, RoutedEventArgs e) => ZoomAtCenter(-1);
 
     private void ViewOption_Click(object sender, RoutedEventArgs e) => RedrawAll();
+
+    private void Undo_Click(object sender, RoutedEventArgs e) => Undo();
+
+    private void Redo_Click(object sender, RoutedEventArgs e) => Redo();
+
+    // ---- 元に戻す／やり直し ----
+
+    private void Undo()
+    {
+        EndStroke();
+        if (CurrentTab is { } tab && tab.Document.History.Undo())
+        {
+            AfterHistoryChange(tab);
+        }
+    }
+
+    private void Redo()
+    {
+        EndStroke();
+        if (CurrentTab is { } tab && tab.Document.History.Redo())
+        {
+            AfterHistoryChange(tab);
+        }
+    }
+
+    private void AfterHistoryChange(DocumentTab tab)
+    {
+        tab.ImageChanged = true;
+        RefreshHeader(tab);
+        UpdateUndoButtons();
+        Canvas.Invalidate();
+        PreviewCanvas.Invalidate();
+    }
+
+    private void UpdateUndoButtons()
+    {
+        UndoHistory? history = CurrentTab?.Document.History;
+        UndoButton.IsEnabled = history?.CanUndo == true;
+        RedoButton.IsEnabled = history?.CanRedo == true;
+    }
 
     // ---- ファイル ----
 
@@ -345,7 +350,7 @@ public sealed partial class MainWindow : Window
 
         document.FilePath = file.Path;
         document.Name = file.Name;
-        document.IsDirty = false;
+        document.MarkSaved();
         RefreshHeader(tab);
         return true;
     }
@@ -598,10 +603,25 @@ public sealed partial class MainWindow : Window
             _panStartX = tab.PanX;
             _panStartY = tab.PanY;
         }
+        else if (props.IsLeftButtonPressed && e.KeyModifiers.HasFlag(VirtualKeyModifiers.Menu))
+        {
+            // Alt+クリックでスポイト（表示中の色を拾う）
+            (int x, int y) = ToImage(tab, point.Position);
+            if (tab.Document.ActiveLayer.Image.Contains(x, y))
+            {
+                SetCurrentColor(tab.Document.Composite().GetPixel(x, y));
+            }
+
+            e.Handled = true;
+            return;
+        }
         else if (props.IsLeftButtonPressed || props.IsRightButtonPressed || props.IsEraser)
         {
+            EndStroke();
             _drag = DragMode.Paint;
             _paintColor = props.IsRightButtonPressed || props.IsEraser ? 0u : _color;
+            _stroke = tab.Document.BeginStroke();
+            _strokeTab = tab;
             (_lastX, _lastY) = ToImage(tab, point.Position);
             Paint(tab, [(_lastX, _lastY)]);
         }
@@ -644,11 +664,27 @@ public sealed partial class MainWindow : Window
 
     private void Canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        _drag = DragMode.None;
+        EndStroke();
         Canvas.ReleasePointerCapture(e.Pointer);
     }
 
-    private void Canvas_PointerCaptureLost(object sender, PointerRoutedEventArgs e) => _drag = DragMode.None;
+    private void Canvas_PointerCaptureLost(object sender, PointerRoutedEventArgs e) => EndStroke();
+
+    /// <summary>描いている途中のひと筆を確定して履歴に積む。</summary>
+    private void EndStroke()
+    {
+        _drag = DragMode.None;
+        if (_stroke is null || _strokeTab is null)
+        {
+            return;
+        }
+
+        _stroke.Commit();
+        RefreshHeader(_strokeTab);
+        _stroke = null;
+        _strokeTab = null;
+        UpdateUndoButtons();
+    }
 
     private void Canvas_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
@@ -665,11 +701,15 @@ public sealed partial class MainWindow : Window
 
     private void Paint(DocumentTab tab, IEnumerable<(int X, int Y)> points)
     {
-        PixelImage image = tab.Document.ActiveLayer.Image;
+        if (_stroke is null)
+        {
+            return;
+        }
+
         bool changed = false;
         foreach ((int x, int y) in points)
         {
-            changed |= image.SetPixel(x, y, _paintColor);
+            changed |= _stroke.Plot(x, y, _paintColor);
         }
 
         if (!changed)
@@ -678,12 +718,6 @@ public sealed partial class MainWindow : Window
         }
 
         tab.ImageChanged = true;
-        if (!tab.Document.IsDirty)
-        {
-            tab.Document.IsDirty = true;
-            RefreshHeader(tab);
-        }
-
         Canvas.Invalidate();
         PreviewCanvas.Invalidate();
     }

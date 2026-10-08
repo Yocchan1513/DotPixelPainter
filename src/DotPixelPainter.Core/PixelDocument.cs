@@ -7,8 +7,9 @@ public sealed class PixelDocument
 {
     private readonly List<Layer> _layers = [];
 
-    public PixelDocument(string name, int width, int height)
+    public PixelDocument(string name, int width, int height, long undoMemoryLimit = UndoHistory.DefaultMemoryLimit)
     {
+        History = new UndoHistory(undoMemoryLimit);
         Name = name;
         Width = width;
         Height = height;
@@ -29,7 +30,16 @@ public sealed class PixelDocument
 
     public Layer ActiveLayer => _layers[ActiveLayerIndex];
 
-    public bool IsDirty { get; set; }
+    /// <summary>元に戻す／やり直しの履歴。</summary>
+    public UndoHistory History { get; }
+
+    /// <summary>最後に保存した状態から変わっているか。元に戻して保存時の状態になれば false に戻る。</summary>
+    public bool IsDirty => History.IsDirty;
+
+    public void MarkSaved() => History.MarkSaved();
+
+    /// <summary>アクティブなレイヤーにひと筆描き始める。描き終わったら Commit を呼ぶ。</summary>
+    public PixelStroke BeginStroke() => new(this, ActiveLayer);
 
     public Layer AddLayer(string name)
     {

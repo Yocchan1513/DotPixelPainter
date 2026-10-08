@@ -47,14 +47,15 @@
             <Button Content="開く" Click="Open_Click" ToolTipService.ToolTip="PNGを開く (Ctrl+O)" />
             <Button Content="保存" Click="Save_Click" ToolTipService.ToolTip="PNGで保存 (Ctrl+S)" />
             <AppBarSeparator />
+            <Button x:Name="UndoButton" Content="元に戻す" Click="Undo_Click" IsEnabled="False" ToolTipService.ToolTip="元に戻す (Ctrl+Z)" />
+            <Button x:Name="RedoButton" Content="やり直し" Click="Redo_Click" IsEnabled="False" ToolTipService.ToolTip="やり直し (Ctrl+Y / Ctrl+Shift+Z)" />
+            <AppBarSeparator />
             <Button Content="－" Click="ZoomOut_Click" ToolTipService.ToolTip="縮小" />
             <TextBlock x:Name="ZoomText" MinWidth="56" VerticalAlignment="Center" TextAlignment="Center" Text="800%" />
             <Button Content="＋" Click="ZoomIn_Click" ToolTipService.ToolTip="拡大" />
             <AppBarSeparator />
             <ToggleButton x:Name="GridToggle" Content="グリッド" IsChecked="True" Click="ViewOption_Click" ToolTipService.ToolTip="1pxグリッド線（4倍以上で表示）" />
             <ToggleButton x:Name="FlipToggle" Content="左右反転表示" Click="ViewOption_Click" ToolTipService.ToolTip="表示だけを左右反転（絵は変わらない）" />
-            <AppBarSeparator />
-            <StackPanel x:Name="Swatches" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" />
         </StackPanel>
 
         <!-- キャンバスと等倍プレビュー -->
@@ -84,9 +85,55 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock Text="プレビュー（等倍・2倍）" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                     <win2d:CanvasControl x:Name="PreviewCanvas" Grid.Row="1" Draw="PreviewCanvas_Draw" />
+
+                    <!-- パレット -->
+                    <Grid Grid.Row="2">
+                        <TextBlock Text="パレット" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
+                            <Button Content="＋" Padding="8,2" Click="AddColor_Click" ToolTipService.ToolTip="描画色をパレットに追加" />
+                            <Button Content="…" Padding="8,2" ToolTipService.ToolTip="パレットの読み込み・書き出し">
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                        <MenuFlyoutItem Text="GIMPパレット（.gpl）を読み込む" Click="ImportPalette_Click" />
+                                        <MenuFlyoutItem Text="GIMPパレット（.gpl）に書き出す" Click="ExportPalette_Click" />
+                                        <MenuFlyoutSeparator />
+                                        <MenuFlyoutItem Text="初期パレットに戻す" Click="ResetPalette_Click" />
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                    <VariableSizedWrapGrid
+                        x:Name="PaletteGrid"
+                        Grid.Row="3"
+                        Orientation="Horizontal"
+                        ItemWidth="27"
+                        ItemHeight="27"
+                        MaximumRowsOrColumns="7" />
+
+                    <!-- 描画色 -->
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10">
+                        <Button
+                            x:Name="CurrentColorButton"
+                            Width="44"
+                            Height="44"
+                            Padding="0"
+                            Click="CurrentColor_Click"
+                            ToolTipService.ToolTip="描画色を変更" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="CurrentColorText" Style="{ThemeResource BodyTextBlockStyle}" />
+                            <TextBlock
+                                Text="Alt+クリックでスポイト"
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
                 </Grid>
             </Border>
         </Grid>
