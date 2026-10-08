@@ -1,0 +1,19 @@
+# ビルド出力
+bin/
+obj/
+artifacts/
+
+# Visual Studio / VS Code
+.vs/
+*.user
+*.suo
+.vscode/*
+!.vscode/extensions.json
+
+# テスト結果
+TestResults/
+*.trx
+
+# OS
+Thumbs.db
+Desktop.ini
