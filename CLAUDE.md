@@ -48,13 +48,17 @@ tools/measure-startup.ps1   起動時間の計測
 ```powershell
 dotnet test                                   # Core のテスト
 dotnet build src/DotPixelPainter.App          # Debug ビルド
-# 配布用（ReadyToRun + トリミング）
-dotnet publish src/DotPixelPainter.App -c Release -r win-x64 -o artifacts/publish -p:PublishAot=false -p:PublishReadyToRun=true -p:PublishTrimmed=true
-# 起動時間の計測
-./tools/measure-startup.ps1 -Exe artifacts/publish/DotPixelPainter.exe -Runs 10
+# 配布用（Native AOT。こちらが本番）
+dotnet publish src/DotPixelPainter.App -c Release -r win-x64 -o artifacts/publish
+# 比較用（ReadyToRun + トリミング。C++ ツールがない環境でも作れる）
+dotnet publish src/DotPixelPainter.App -c Release -r win-x64 -o artifacts/publish-r2r -p:PublishAot=false -p:PublishReadyToRun=true -p:PublishTrimmed=true
+# 起動時間の計測（-Breakdown で段階ごとの内訳も出る）
+./tools/measure-startup.ps1 -Exe artifacts/publish/DotPixelPainter.exe -Runs 10 -Breakdown
 ```
 
 - Release の既定は Native AOT（`PublishAot=true`）。AOT ビルドには Visual Studio の「C++ によるデスクトップ開発」ワークロードが必要。
+- AOT ビルドで `'vswhere.exe' は...認識されていません` と出たら、`C:\Program Files (x86)\Microsoft Visual Studio\Installer` を PATH に足す（ワークロード追加直後で、再起動前の場合に起きる）。
+- 2026-10-09 時点の実測（Ryzen 5 5500、2回目以降の中央値）: Native AOT 約0.43秒、ReadyToRun 約0.49秒。
 - 公開用出力にアプリの .pri を含めるため `EnableMsixTooling=true` が必要（外すと起動直後に落ちる）。
 
 ## 見た目の確認
