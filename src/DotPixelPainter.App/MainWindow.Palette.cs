@@ -11,7 +11,9 @@ namespace DotPixelPainter;
 /// <summary>カスタムパレットと描画色。</summary>
 public sealed partial class MainWindow
 {
-    private readonly List<Button> _swatchButtons = [];
+    private readonly List<Border> _swatchButtons = [];
+    private MenuFlyout? _swatchMenu;
+    private int _swatchMenuIndex;
     private Palette _palette = Palette.CreateDefault();
     private uint _color = 0xFF000000;
     private Flyout? _colorFlyout;
@@ -77,48 +79,64 @@ public sealed partial class MainWindow
         _swatchButtons.Clear();
         for (int i = 0; i < _palette.Colors.Count; i++)
         {
+            // 起動を軽くするため、ボタンではなく枠（Border）で描き、右クリックメニューは1つを使い回す
             int index = i;
             uint argb = _palette.Colors[i];
-            var button = new Button
+            var swatch = new Border
             {
                 Width = 24,
                 Height = 24,
-                Padding = new Thickness(0),
+                CornerRadius = new CornerRadius(4),
                 Background = new SolidColorBrush(ToColor(argb)),
                 Tag = argb,
             };
-            ToolTipService.SetToolTip(button, $"#{argb:X8}（右クリックで編集）");
-            button.Click += (_, _) => SetCurrentColor(_palette.Colors[index]);
-
-            var replace = new MenuFlyoutItem { Text = "描画色で置き換え" };
-            replace.Click += (_, _) =>
+            ToolTipService.SetToolTip(swatch, $"#{argb:X8}（右クリックで編集）");
+            swatch.Tapped += (_, _) => SetCurrentColor(_palette.Colors[index]);
+            swatch.RightTapped += (s, e) =>
             {
-                _palette.Replace(index, _color);
-                OnPaletteChanged();
+                _swatchMenuIndex = index;
+                GetSwatchMenu().ShowAt((FrameworkElement)s, e.GetPosition((UIElement)s));
+                e.Handled = true;
             };
-            var remove = new MenuFlyoutItem { Text = "削除" };
-            remove.Click += (_, _) =>
-            {
-                _palette.RemoveAt(index);
-                OnPaletteChanged();
-            };
-            var menu = new MenuFlyout();
-            menu.Items.Add(replace);
-            menu.Items.Add(remove);
-            button.ContextFlyout = menu;
 
-            _swatchButtons.Add(button);
-            PaletteGrid.Children.Add(button);
+            _swatchButtons.Add(swatch);
+            PaletteGrid.Children.Add(swatch);
         }
 
         UpdateSwatchSelection();
+    }
+
+    /// <summary>パレットの色の右クリックメニュー。初めて右クリックしたときに作る。</summary>
+    private MenuFlyout GetSwatchMenu()
+    {
+        if (_swatchMenu is not null)
+        {
+            return _swatchMenu;
+        }
+
+        var replace = new MenuFlyoutItem { Text = "描画色で置き換え" };
+        replace.Click += (_, _) =>
+        {
+            _palette.Replace(_swatchMenuIndex, _color);
+            OnPaletteChanged();
+        };
+        var remove = new MenuFlyoutItem { Text = "削除" };
+        remove.Click += (_, _) =>
+        {
+            _palette.RemoveAt(_swatchMenuIndex);
+            OnPaletteChanged();
+        };
+        _swatchMenu = new MenuFlyout();
+        _swatchMenu.Items.Add(replace);
+        _swatchMenu.Items.Add(remove);
+        return _swatchMenu;
     }
 
     private void UpdateSwatchSelection()
     {
         var accent = (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"];
         var normal = (Brush)Application.Current.Resources["ControlStrokeColorDefaultBrush"];
-        foreach (Button b in _swatchButtons)
+        foreach (Border b in _swatchButtons)
         {
             bool selected = (uint)b.Tag == _color;
             b.BorderThickness = new Thickness(selected ? 3 : 1);

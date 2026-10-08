@@ -48,19 +48,36 @@ public sealed partial class MainWindow : Window
     {
         _probe = probe;
         InitializeComponent();
+        _probe.Mark("xaml");
 
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(DragRegion);
-        AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
         AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 800));
         AppWindow.Closing += AppWindow_Closing;
         Root.Loaded += (_, _) => UpdateTitleBarInset();
         Root.SizeChanged += (_, _) => UpdateTitleBarInset();
 
+        _probe.Mark("titlebar");
+
         InitializePalette();
+        _probe.Mark("palette");
         BuildToolPanel();
+        _probe.Mark("tools");
         AddKeyboardShortcuts();
         AddTab(CreateUntitled());
+        _probe.Mark("tab");
+        Root.Loaded += (_, _) => _probe.Mark("loaded");
+    }
+
+    /// <summary>
+    /// タブをタイトルバーに入れる設定。ウィンドウ表示前に行うと 160ms ほどかかるため、
+    /// 表示した直後（Activate の後）に呼ぶ。
+    /// </summary>
+    public void ExtendIntoTitleBar()
+    {
+        ExtendsContentIntoTitleBar = true;
+        _probe.Mark("t-extend");
+        SetTitleBar(DragRegion);
+        AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
+        UpdateTitleBarInset();
     }
 
     private enum DragMode
@@ -498,6 +515,7 @@ public sealed partial class MainWindow : Window
         if (!_firstFrameReported)
         {
             _firstFrameReported = true;
+            _probe.Mark("first-draw");
             DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
             {
                 if (_probe.ReportFirstFrame())
