@@ -58,6 +58,7 @@ public sealed partial class MainWindow : Window
         Root.SizeChanged += (_, _) => UpdateTitleBarInset();
 
         InitializePalette();
+        BuildToolPanel();
         AddKeyboardShortcuts();
         AddTab(CreateUntitled());
     }
@@ -67,6 +68,7 @@ public sealed partial class MainWindow : Window
         None,
         Paint,
         Pan,
+        Shape,
     }
 
     private DocumentTab? CurrentTab =>
@@ -484,6 +486,8 @@ public sealed partial class MainWindow : Window
         ds.DrawImage(bitmap, rect, new Rect(0, 0, document.Width, document.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
         ds.Transform = Matrix3x2.Identity;
 
+        DrawShapePreview(ds, tab, rect, tab.Zoom / scale);
+
         if (GridToggle.IsChecked == true && tab.Zoom >= 4)
         {
             DrawPixelGrid(ds, rect, document, tab.Zoom / scale, 1 / scale, (float)sender.ActualWidth, (float)sender.ActualHeight);
@@ -605,25 +609,21 @@ public sealed partial class MainWindow : Window
         }
         else if (props.IsLeftButtonPressed && e.KeyModifiers.HasFlag(VirtualKeyModifiers.Menu))
         {
-            // Alt+クリックでスポイト（表示中の色を拾う）
-            (int x, int y) = ToImage(tab, point.Position);
-            if (tab.Document.ActiveLayer.Image.Contains(x, y))
-            {
-                SetCurrentColor(tab.Document.Composite().GetPixel(x, y));
-            }
-
+            // Alt+クリックは、どの道具でもスポイト（表示中の色を拾う）
+            PickColor(tab, ToImage(tab, point.Position));
             e.Handled = true;
             return;
         }
         else if (props.IsLeftButtonPressed || props.IsRightButtonPressed || props.IsEraser)
         {
+            // 右クリックとペンの消しゴム側は「透明で描く」
             EndStroke();
-            _drag = DragMode.Paint;
-            _paintColor = props.IsRightButtonPressed || props.IsEraser ? 0u : _color;
-            _stroke = tab.Document.BeginStroke();
-            _strokeTab = tab;
-            (_lastX, _lastY) = ToImage(tab, point.Position);
-            Paint(tab, [(_lastX, _lastY)]);
+            bool erase = props.IsRightButtonPressed || props.IsEraser;
+            if (!BeginToolAction(tab, ToImage(tab, point.Position), erase))
+            {
+                e.Handled = true;
+                return;
+            }
         }
         else
         {
@@ -653,6 +653,10 @@ public sealed partial class MainWindow : Window
                 (_lastX, _lastY) = (x, y);
             }
         }
+        else if (_drag == DragMode.Shape)
+        {
+            UpdateShapeEnd((x, y), e.KeyModifiers.HasFlag(VirtualKeyModifiers.Shift));
+        }
         else if (_drag == DragMode.Pan)
         {
             float scale = Canvas.Dpi / 96f;
@@ -664,15 +668,31 @@ public sealed partial class MainWindow : Window
 
     private void Canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        if (_drag == DragMode.Shape)
+        {
+            _drag = DragMode.None;
+            CommitShape();
+            _strokeTab = null;
+        }
+
         EndStroke();
         Canvas.ReleasePointerCapture(e.Pointer);
     }
 
     private void Canvas_PointerCaptureLost(object sender, PointerRoutedEventArgs e) => EndStroke();
 
-    /// <summary>描いている途中のひと筆を確定して履歴に積む。</summary>
+    /// <summary>
+    /// 描いている途中のひと筆を確定して履歴に積む。
+    /// 確定前の図形（ドラッグ中のプレビュー）は取り消す。
+    /// </summary>
     private void EndStroke()
     {
+        if (_drag == DragMode.Shape)
+        {
+            _strokeTab = null;
+            Canvas.Invalidate();
+        }
+
         _drag = DragMode.None;
         if (_stroke is null || _strokeTab is null)
         {
@@ -762,7 +782,7 @@ public sealed partial class MainWindow : Window
 
         ZoomText.Text = $"{tab.Zoom * 100}%";
         string pos = position is { } p && tab.Document.ActiveLayer.Image.Contains(p.X, p.Y) ? $"{p.X}, {p.Y}" : "-";
-        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}　｜　{tab.Document.ActiveLayer.Name}";
+        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}　｜　{ToolStatus()}　｜　{tab.Document.ActiveLayer.Name}";
     }
 
     private static Color ToColor(uint argb) =>

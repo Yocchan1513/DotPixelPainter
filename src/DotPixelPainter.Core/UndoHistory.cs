@@ -162,6 +162,95 @@ public sealed class PixelStroke
         return true;
     }
 
+    /// <summary>区間の集まり（図形）を塗る。1画素でも変わったら true。</summary>
+    public bool PlotSpans(IEnumerable<PixelSpan> spans, uint argb)
+    {
+        bool changed = false;
+        foreach (PixelSpan s in spans)
+        {
+            int x0 = Math.Max(s.X0, 0);
+            int x1 = Math.Min(s.X1, _image.Width - 1);
+            for (int x = x0; x <= x1; x++)
+            {
+                changed |= Plot(x, s.Y, argb);
+            }
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    /// 塗りつぶし。(x, y) と同じ色で上下左右につながった範囲を塗る（斜めにはつながない）。
+    /// 塗った画素数を返す。
+    /// </summary>
+    public int FloodFill(int x, int y, uint argb)
+    {
+        if (_committed || !_image.Contains(x, y))
+        {
+            return 0;
+        }
+
+        uint target = _image.GetPixel(x, y);
+        if (target == argb)
+        {
+            return 0;
+        }
+
+        int count = 0;
+        var stack = new Stack<(int X, int Y)>();
+        stack.Push((x, y));
+        while (stack.Count > 0)
+        {
+            (int sx, int sy) = stack.Pop();
+            if (_image.GetPixel(sx, sy) != target || !_image.Contains(sx, sy))
+            {
+                continue;
+            }
+
+            // 左右に伸ばして1行ぶん塗る
+            int left = sx;
+            while (left > 0 && _image.GetPixel(left - 1, sy) == target)
+            {
+                left--;
+            }
+
+            int right = sx;
+            while (right < _image.Width - 1 && _image.GetPixel(right + 1, sy) == target)
+            {
+                right++;
+            }
+
+            for (int px = left; px <= right; px++)
+            {
+                Plot(px, sy, argb);
+                count++;
+            }
+
+            // 上下の行で、まだ塗っていない区間の先頭を積む
+            foreach (int ny in (ReadOnlySpan<int>)[sy - 1, sy + 1])
+            {
+                if (ny < 0 || ny >= _image.Height)
+                {
+                    continue;
+                }
+
+                bool inRun = false;
+                for (int px = left; px <= right; px++)
+                {
+                    bool match = _image.GetPixel(px, ny) == target;
+                    if (match && !inRun)
+                    {
+                        stack.Push((px, ny));
+                    }
+
+                    inRun = match;
+                }
+            }
+        }
+
+        return count;
+    }
+
     /// <summary>履歴に積む。実際に色が変わった画素がなければ何も積まない。</summary>
     public void Commit()
     {

@@ -58,15 +58,44 @@
             <ToggleButton x:Name="FlipToggle" Content="左右反転表示" Click="ViewOption_Click" ToolTipService.ToolTip="表示だけを左右反転（絵は変わらない）" />
         </StackPanel>
 
-        <!-- キャンバスと等倍プレビュー -->
+        <!-- ツールパネル・キャンバス・右パネル -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="220" />
             </Grid.ColumnDefinitions>
 
+            <!-- ツール: 上段で道具、下段で描き方を選ぶ -->
+            <Border
+                x:Name="ToolPanel"
+                Width="116"
+                Padding="10"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,1,0">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="ツール" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <VariableSizedWrapGrid
+                        x:Name="ToolGrid"
+                        Orientation="Horizontal"
+                        ItemWidth="44"
+                        ItemHeight="44"
+                        MaximumRowsOrColumns="2" />
+                    <Rectangle Height="1" Margin="0,4" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    <TextBlock Text="描き方" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <VariableSizedWrapGrid
+                        x:Name="ShapeGrid"
+                        Orientation="Horizontal"
+                        ItemWidth="44"
+                        ItemHeight="44"
+                        MaximumRowsOrColumns="2" />
+                </StackPanel>
+            </Border>
+
             <win2d:CanvasControl
                 x:Name="Canvas"
+                Grid.Column="1"
                 ClearColor="#FF2B2B2B"
                 Draw="Canvas_Draw"
                 PointerPressed="Canvas_PointerPressed"
@@ -76,7 +105,7 @@
                 PointerWheelChanged="Canvas_PointerWheelChanged" />
 
             <Border
-                Grid.Column="1"
+                Grid.Column="2"
                 Padding="12"
                 Background="{ThemeResource LayerFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
