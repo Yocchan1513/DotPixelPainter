@@ -24,7 +24,5 @@ public partial class App : Application
         StartupProbe.Current.Mark("window-built");
         _window.Activate();
         StartupProbe.Current.Mark("activated");
-        _window.ExtendIntoTitleBar();
-        StartupProbe.Current.Mark("titlebar-after");
     }
 }

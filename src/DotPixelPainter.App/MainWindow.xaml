@@ -28,11 +28,7 @@
             TabWidthMode="SizeToContent"
             AddTabButtonClick="Tabs_AddTabButtonClick"
             TabCloseRequested="Tabs_TabCloseRequested"
-            SelectionChanged="Tabs_SelectionChanged">
-            <TabView.TabStripFooter>
-                <Grid x:Name="DragRegion" MinWidth="160" Background="Transparent" />
-            </TabView.TabStripFooter>
-        </TabView>
+            SelectionChanged="Tabs_SelectionChanged" />
 
         <!-- ツールバー -->
         <StackPanel

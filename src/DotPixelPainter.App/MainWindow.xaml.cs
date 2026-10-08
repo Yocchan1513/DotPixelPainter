@@ -50,12 +50,13 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         _probe.Mark("xaml");
 
+        // タブはタイトルバーの下に並べる（タイトルバーに入れる設定は起動を 150ms ほど遅くするため使わない）
         AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 800));
         AppWindow.Closing += AppWindow_Closing;
-        Root.Loaded += (_, _) => UpdateTitleBarInset();
-        Root.SizeChanged += (_, _) => UpdateTitleBarInset();
 
-        _probe.Mark("titlebar");
+        // 標準のタイトルバーの明暗を、アプリのテーマ（＝Windows の設定）に合わせる
+        ApplyTitleBarTheme(Application.Current.RequestedTheme == ApplicationTheme.Dark);
+        Root.ActualThemeChanged += (s, _) => ApplyTitleBarTheme(s.ActualTheme == ElementTheme.Dark);
 
         InitializePalette();
         _probe.Mark("palette");
@@ -65,19 +66,6 @@ public sealed partial class MainWindow : Window
         AddTab(CreateUntitled());
         _probe.Mark("tab");
         Root.Loaded += (_, _) => _probe.Mark("loaded");
-    }
-
-    /// <summary>
-    /// タブをタイトルバーに入れる設定。ウィンドウ表示前に行うと 160ms ほどかかるため、
-    /// 表示した直後（Activate の後）に呼ぶ。
-    /// </summary>
-    public void ExtendIntoTitleBar()
-    {
-        ExtendsContentIntoTitleBar = true;
-        _probe.Mark("t-extend");
-        SetTitleBar(DragRegion);
-        AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
-        UpdateTitleBarInset();
     }
 
     private enum DragMode
@@ -119,6 +107,17 @@ public sealed partial class MainWindow : Window
                 item.Header = tab.Header;
             }
         }
+
+        UpdateWindowTitle();
+    }
+
+    private void ApplyTitleBarTheme(bool dark) =>
+        NativeMethods.SetDarkTitleBar(WindowNative.GetWindowHandle(this), dark);
+
+    /// <summary>タイトルバーに「ファイル名 - DotPixelPainter」を出す。未保存なら名前の後ろに ● を付ける。</summary>
+    private void UpdateWindowTitle()
+    {
+        Title = CurrentTab is { } tab ? $"{tab.Header} - DotPixelPainter" : "DotPixelPainter";
     }
 
     private async Task CloseTabAsync(TabViewItem item)
@@ -182,12 +181,7 @@ public sealed partial class MainWindow : Window
         EndStroke();
         RedrawAll();
         UpdateUndoButtons();
-    }
-
-    private void UpdateTitleBarInset()
-    {
-        double scale = Root.XamlRoot?.RasterizationScale ?? 1.0;
-        DragRegion.MinWidth = AppWindow.TitleBar.RightInset / scale + 48;
+        UpdateWindowTitle();
     }
 
     private async void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)

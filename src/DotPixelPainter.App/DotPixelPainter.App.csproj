@@ -21,6 +21,8 @@
     <SatelliteResourceLanguages>ja;en</SatelliteResourceLanguages>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Win32 API の呼び出し（LibraryImport）に必要 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- 起動を速くするため、配布ビルドは Native AOT で事前コンパイルする -->
