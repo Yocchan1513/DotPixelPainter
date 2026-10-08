@@ -127,8 +127,8 @@ public sealed partial class MainWindow
     {
         var button = new ToggleButton
         {
-            Width = 40,
-            Height = 40,
+            Width = 34,
+            Height = 34,
             Padding = new Thickness(0),
             Content = icon,
             HorizontalContentAlignment = HorizontalAlignment.Center,

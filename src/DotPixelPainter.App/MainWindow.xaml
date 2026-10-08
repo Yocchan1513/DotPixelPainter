@@ -62,31 +62,21 @@
                 <ColumnDefinition Width="220" />
             </Grid.ColumnDefinitions>
 
-            <!-- ツール: 上段で道具、下段で描き方を選ぶ -->
+            <!-- ツール: 縦1列の細い帯。上が道具、区切り線の下が描き方 -->
             <Border
                 x:Name="ToolPanel"
-                Width="116"
-                Padding="10"
+                Width="49"
                 Background="{ThemeResource LayerFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="0,0,1,0">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="ツール" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <VariableSizedWrapGrid
-                        x:Name="ToolGrid"
-                        Orientation="Horizontal"
-                        ItemWidth="44"
-                        ItemHeight="44"
-                        MaximumRowsOrColumns="2" />
-                    <Rectangle Height="1" Margin="0,4" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                    <TextBlock Text="描き方" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <VariableSizedWrapGrid
-                        x:Name="ShapeGrid"
-                        Orientation="Horizontal"
-                        ItemWidth="44"
-                        ItemHeight="44"
-                        MaximumRowsOrColumns="2" />
-                </StackPanel>
+                <!-- ウィンドウが低いときはスクロールできるようにする -->
+                <ScrollViewer VerticalScrollBarVisibility="Hidden" VerticalScrollMode="Auto">
+                    <StackPanel Padding="7,8" Spacing="3">
+                        <StackPanel x:Name="ToolGrid" Spacing="3" />
+                        <Rectangle Height="1" Margin="2,5" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                        <StackPanel x:Name="ShapeGrid" Spacing="3" />
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
 
             <win2d:CanvasControl
