@@ -38,6 +38,10 @@ public sealed partial class MainWindow
             ItemHeight = 38,
             MaximumRowsOrColumns = 4,
         };
+        // Minecraft スキンのボタンを押したときだけ、作ったあとスキンモードにする（null ならふつうの画像）
+        bool? skinSlim = null;
+        var skinNote = new TextBlock { FontSize = 12, Visibility = Visibility.Collapsed };
+
         foreach (int size in PresetSizes)
         {
             var preset = new Button { Content = $"{size}×{size}", HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -45,8 +49,25 @@ public sealed partial class MainWindow
             {
                 widthBox.Value = size;
                 heightBox.Value = size;
+                skinSlim = null;
+                skinNote.Visibility = Visibility.Collapsed;
             };
             presets.Children.Add(preset);
+        }
+
+        var skinRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        foreach ((string label, bool slim) in new[] { ("Minecraft スキン（クラシック）", false), ("スリム", true) })
+        {
+            var button = new Button { Content = label };
+            button.Click += (_, _) =>
+            {
+                widthBox.Value = 64;
+                heightBox.Value = 64;
+                skinSlim = slim;
+                skinNote.Text = $"64×64 のスキンとして作ります（腕: {(slim ? "スリム 3px" : "クラシック 4px")}）";
+                skinNote.Visibility = Visibility.Visible;
+            };
+            skinRow.Children.Add(button);
         }
 
         var background = new RadioButtons { Header = "背景", MaxColumns = 2 };
@@ -63,6 +84,8 @@ public sealed partial class MainWindow
             FontSize = 12,
         });
         panel.Children.Add(presets);
+        panel.Children.Add(skinRow);
+        panel.Children.Add(skinNote);
         panel.Children.Add(background);
 
         var dialog = new ContentDialog
@@ -87,7 +110,14 @@ public sealed partial class MainWindow
 
         var chosen = new NewDocumentSettings((int)widthBox.Value, (int)heightBox.Value, background.SelectedIndex == 1);
         chosen.Save();
-        AddTab(CreateUntitled(chosen.Width, chosen.Height, chosen.WhiteBackground));
+        PixelDocument document = CreateUntitled(chosen.Width, chosen.Height, chosen.WhiteBackground);
+        if (skinSlim is { } slimArms && SkinLayout.IsSkinSize(chosen.Width, chosen.Height))
+        {
+            document.SkinMode = true;
+            document.SlimArms = slimArms;
+        }
+
+        AddTab(document);
     }
 
     private static NumberBox SizeBox(string header, int value) => new()

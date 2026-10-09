@@ -42,6 +42,15 @@ public static class DotPixFile
             }
 
             writer.WriteEndArray();
+
+            // 追加の項目。古い版はこの項目を読み飛ばすので、version は上げない
+            if (document.SkinMode)
+            {
+                writer.WriteStartObject("skin");
+                writer.WriteBoolean("slim", document.SlimArms);
+                writer.WriteEndObject();
+            }
+
             writer.WriteEndObject();
         }
 
@@ -100,7 +109,14 @@ public static class DotPixFile
         }
 
         int active = root.TryGetProperty("activeLayer", out JsonElement a) ? a.GetInt32() : 0;
-        return PixelDocument.FromLayers(name, width, height, layers, active);
+        PixelDocument document = PixelDocument.FromLayers(name, width, height, layers, active);
+        if (root.TryGetProperty("skin", out JsonElement skin) && SkinLayout.IsSkinSize(width, height))
+        {
+            document.SkinMode = true;
+            document.SlimArms = skin.TryGetProperty("slim", out JsonElement slim) && slim.GetBoolean();
+        }
+
+        return document;
     }
 
     private static string LayerPath(int index) => string.Create(CultureInfo.InvariantCulture, $"layers/{index}.png");

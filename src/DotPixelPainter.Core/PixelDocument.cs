@@ -34,6 +34,14 @@ public sealed class PixelDocument
 
     public string? FilePath { get; set; }
 
+    /// <summary>Minecraft スキンとして編集しているか（部位ガイドと 3D プレビューを出す）。</summary>
+    public bool SkinMode { get; set; }
+
+    /// <summary>スキンの腕がスリム（3px）か。false ならクラシック（4px）。</summary>
+    public bool SlimArms { get; set; }
+
+    public bool IsLegacySkin => Height == 32;
+
     public int Width { get; }
 
     public int Height { get; }

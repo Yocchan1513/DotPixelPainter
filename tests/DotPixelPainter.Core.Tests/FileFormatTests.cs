@@ -84,6 +84,31 @@ public class FileFormatTests
     }
 
     [Fact]
+    public void DotPix_KeepsSkinSettings()
+    {
+        var doc = new PixelDocument("skin", 64, 64) { SkinMode = true, SlimArms = true };
+        using var stream = new MemoryStream();
+        DotPixFile.Write(doc, stream);
+        stream.Position = 0;
+
+        PixelDocument back = DotPixFile.Read(stream, "skin.dotpix");
+
+        Assert.True(back.SkinMode);
+        Assert.True(back.SlimArms);
+    }
+
+    [Fact]
+    public void DotPix_NonSkinDocument_StaysNormal()
+    {
+        PixelDocument doc = SampleDocument();
+        using var stream = new MemoryStream();
+        DotPixFile.Write(doc, stream);
+        stream.Position = 0;
+
+        Assert.False(DotPixFile.Read(stream, "x").SkinMode);
+    }
+
+    [Fact]
     public void DotPix_ContainsMergedPreview()
     {
         PixelDocument doc = SampleDocument();

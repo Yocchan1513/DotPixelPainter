@@ -214,6 +214,7 @@ public sealed partial class MainWindow : Window
         UpdateUndoButtons();
         UpdateWindowTitle();
         RefreshLayerList();
+        UpdateSkinUi();
     }
 
     private async void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
@@ -720,6 +721,7 @@ public sealed partial class MainWindow : Window
         }
 
         ds.DrawRectangle(rect, FrameColor, 1 / scale);
+        DrawSkinGuide(ds, tab, rect, tab.Zoom / scale, 1 / scale);
         DrawSelectionFrame(ds, tab, rect, tab.Zoom / scale, 1 / scale);
 
         if (!_firstFrameReported)
@@ -794,6 +796,17 @@ public sealed partial class MainWindow : Window
         CanvasDrawingSession ds = args.DrawingSession;
         ds.Antialiasing = CanvasAntialiasing.Aliased;
         CanvasBitmap bitmap = GetBitmap(sender, tab);
+        if (IsSkinTab(tab) && SkinLayout.IsSkinSize(document.Width, document.Height))
+        {
+            if (PreviewBackgroundColor() is { } skinBackground)
+            {
+                ds.Clear(skinBackground);
+            }
+
+            DrawSkin3D(sender, ds, bitmap, document);
+            return;
+        }
+
         CanvasImageBrush checker = GetChecker(sender);
         float scale = sender.Dpi / 96f;
         float availW = (float)sender.ActualWidth;
@@ -911,6 +924,7 @@ public sealed partial class MainWindow : Window
 
         var point = e.GetCurrentPoint(Canvas);
         (int x, int y) = ToImage(tab, point.Position);
+        UpdateSkinHover(tab, (x, y));
         UpdateStatus((x, y));
 
         if (_drag == DragMode.Paint)
@@ -1060,7 +1074,8 @@ public sealed partial class MainWindow : Window
 
         ZoomText.Text = $"{tab.Zoom * 100}%";
         string pos = position is { } p && tab.Document.ActiveLayer.Image.Contains(p.X, p.Y) ? $"{p.X}, {p.Y}" : "-";
-        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}　｜　{ToolStatus()}　｜　{tab.Document.ActiveLayer.Name}";
+        string skin = IsSkinTab(tab) && SkinStatus() is { Length: > 0 } part ? $"　｜　{part}" : "";
+        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}　｜　{tab.Document.ActiveLayer.Name}";
     }
 
     private static Color ToColor(uint argb) =>
