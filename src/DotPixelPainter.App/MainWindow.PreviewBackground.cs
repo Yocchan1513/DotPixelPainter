@@ -36,11 +36,7 @@ public sealed partial class MainWindow
 
     private void TileToggle_Click(object sender, RoutedEventArgs e)
     {
-        if (!IsSkinTab(CurrentTab))
-        {
-            PreviewCanvas.Height = TileToggle.IsChecked == true ? TilePreviewHeight : NormalPreviewHeight;
-        }
-
+        ApplyPreviewHeight();
         PreviewCanvas.Invalidate();
     }
 

@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:win2d="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    xmlns:local="using:DotPixelPainter"
     Title="DotPixelPainter">
 
     <Window.SystemBackdrop>
@@ -160,6 +161,19 @@
                             PointerMoved="PreviewCanvas_PointerMoved"
                             PointerReleased="PreviewCanvas_PointerReleased"
                             DoubleTapped="PreviewCanvas_DoubleTapped" />
+                        <!-- 下にドラッグしてプレビューを高くする -->
+                        <local:ResizeGrip
+                            Height="10"
+                            Margin="0,-8,0,-6"
+                            Background="Transparent"
+                            PointerPressed="PreviewGrip_PointerPressed"
+                            PointerMoved="PreviewGrip_PointerMoved"
+                            PointerReleased="PreviewGrip_PointerReleased"
+                            PointerCaptureLost="PreviewGrip_PointerCaptureLost"
+                            DoubleTapped="PreviewGrip_DoubleTapped"
+                            ToolTipService.ToolTip="上下にドラッグで高さを変える（ダブルクリックで元に戻す）">
+                            <Rectangle Width="36" Height="3" RadiusX="1.5" RadiusY="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="{ThemeResource ControlStrongFillColorDefaultBrush}" />
+                        </local:ResizeGrip>
                         <!-- スキンモードのときだけ出す -->
                         <StackPanel x:Name="SkinOptions" Orientation="Horizontal" Spacing="4" Visibility="Collapsed">
                             <ToggleButton x:Name="SlimToggle" Content="スリム腕" Click="SkinOption_Click" ToolTipService.ToolTip="腕の太さ: オンでスリム（3px）、オフでクラシック（4px）" />

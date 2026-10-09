@@ -914,13 +914,22 @@ public sealed partial class MainWindow : Window
         CanvasImageBrush checker = GetChecker(sender);
         float scale = sender.Dpi / 96f;
         float availW = (float)sender.ActualWidth;
+        float availH = (float)sender.ActualHeight;
         float y = 0;
 
         foreach (int times in (ReadOnlySpan<int>)[1, 2])
         {
             float w = document.Width * times / scale;
             float h = document.Height * times / scale;
-            if (w > availW)
+            bool tooBig = times == 1 && (w > availW || h > availH);
+            if (tooBig)
+            {
+                // 等倍でも入りきらない大きな絵は、1枚だけを枠いっぱいに縮めて見せる
+                float fit = Math.Min(availW / w, availH / h);
+                w *= fit;
+                h *= fit;
+            }
+            else if (w > availW)
             {
                 h *= availW / w;
                 w = availW;
@@ -944,6 +953,11 @@ public sealed partial class MainWindow : Window
 
             ds.DrawImage(bitmap, rect, new Rect(0, 0, document.Width, document.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
             ds.Transform = Matrix3x2.Identity;
+            if (tooBig)
+            {
+                break;
+            }
+
             y = MathF.Ceiling((y + h) * scale + 16) / scale;
         }
     }
