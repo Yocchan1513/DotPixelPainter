@@ -43,6 +43,11 @@ tools/measure-startup.ps1   起動時間の計測
 - 色は `uint` の 0xAARRGGBB（ストレートアルファ）。表示用に乗算済み BGRA へ変換するのは App 側。
 - キャンバスは物理ピクセル単位で整数倍に拡大し、最近傍補間で描く（ドットをにじませない）。
 
+## 版の上げ方
+
+- 版は `src/DotPixelPainter.App/DotPixelPainter.App.csproj` の `<Version>` で決める（ステータスバーとバージョン情報に出る）。
+- 上げたら、リポジトリ直下の `latest-version.txt` も同じ番号にして main に入れる。「バージョン情報」はこのファイルを GitHub から読んで、最新かどうかを知らせる（リポジトリが公開されているときだけ読める）。
+
 ## ビルドとテスト
 
 ```powershell

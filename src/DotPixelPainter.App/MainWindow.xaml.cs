@@ -846,6 +846,10 @@ public sealed partial class MainWindow : Window
                 {
                     ErrorLog.Run("新規作成（テスト）", NewDocumentWithDialogAsync);
                 }
+                else if (_probe.TestOpen == "about")
+                {
+                    ErrorLog.Run("バージョン情報（テスト）", ShowAboutAsync);
+                }
                 else if (_probe.TestOpen?.StartsWith("detach:", StringComparison.Ordinal) == true
                     && _panels.TryGetValue(_probe.TestOpen["detach:".Length..], out DockPanel? panel)
                     && panel.Floating is null)

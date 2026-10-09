@@ -96,8 +96,7 @@ public sealed partial class MainWindow
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(folder) { UseShellExecute = true });
         });
         HelpMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(HelpMenu, "バージョン情報", null, () => ErrorLog.Run("バージョン情報", () =>
-            ShowMessageAsync("DotPixelPainter", $"バージョン {AppVersion.TrimStart('v')}\n\nドット絵とMinecraftスキンのためのお絵かきソフト")));
+        Add(HelpMenu, "バージョン情報", null, () => ErrorLog.Run("バージョン情報", ShowAboutAsync));
     }
 
     private static MenuFlyoutItem Add(MenuBarItem menu, string text, string? keys, Action action)
