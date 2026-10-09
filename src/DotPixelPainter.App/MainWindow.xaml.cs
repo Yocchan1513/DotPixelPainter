@@ -788,8 +788,16 @@ public sealed partial class MainWindow : Window
             }
 
             var rect = new Rect(0, y, w, h);
-            checker.Transform = Matrix3x2.CreateTranslation(0, y);
-            ds.FillRectangle(rect, checker);
+            if (PreviewBackgroundColor() is { } background)
+            {
+                ds.FillRectangle(rect, background);
+            }
+            else
+            {
+                checker.Transform = Matrix3x2.CreateTranslation(0, y);
+                ds.FillRectangle(rect, checker);
+            }
+
             if (IsFlipped)
             {
                 ds.Transform = Matrix3x2.CreateScale(-1, 1, new Vector2(w / 2, 0));

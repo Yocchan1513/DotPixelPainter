@@ -108,9 +108,14 @@
                     <StackPanel x:Name="PreviewSection" Spacing="8">
                         <Grid>
                             <TextBlock Text="プレビュー（等倍・2倍）" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <Button x:Name="PreviewDetachButton" Tag="preview" HorizontalAlignment="Right" Padding="6,4" Click="PanelDetach_Click">
-                                <FontIcon Glyph="&#xE8A7;" FontSize="12" />
-                            </Button>
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
+                                <Button Padding="6,4" Click="PreviewBackground_Click" ToolTipService.ToolTip="プレビューの背景（市松模様・白・黒・灰色・背景色）">
+                                    <FontIcon Glyph="&#xE790;" FontSize="12" />
+                                </Button>
+                                <Button x:Name="PreviewDetachButton" Tag="preview" Padding="6,4" Click="PanelDetach_Click">
+                                    <FontIcon Glyph="&#xE8A7;" FontSize="12" />
+                                </Button>
+                            </StackPanel>
                         </Grid>
                         <win2d:CanvasControl x:Name="PreviewCanvas" Height="140" Draw="PreviewCanvas_Draw" />
                     </StackPanel>

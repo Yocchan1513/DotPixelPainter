@@ -65,6 +65,7 @@ public sealed partial class MainWindow
     {
         _backColor = argb;
         BackColorSwatch.Background = new SolidColorBrush(ToColor(argb));
+        PreviewCanvas.Invalidate(); // プレビューの背景を「背景色」にしているとき用
     }
 
     private void SwapColors()
