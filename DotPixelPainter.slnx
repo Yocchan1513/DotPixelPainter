@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DotPixelPainter.App/DotPixelPainter.App.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="src/DotPixelPainter.Core/DotPixelPainter.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DotPixelPainter.Core.Tests/DotPixelPainter.Core.Tests.csproj" />
+  </Folder>
+</Solution>

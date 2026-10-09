@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
+    <RootNamespace>DotPixelPainter</RootNamespace>
+    <AssemblyName>DotPixelPainter</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- exe のアイコン。元の絵は リポジトリ直下の icon/ にある -->
+    <ApplicationIcon>Assets\DotPixelPainter.ico</ApplicationIcon>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <!-- インストール不要の単体アプリとして動かす -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <!-- 発行時にアプリのリソース（.pri）を出力へ含める -->
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- 同梱する翻訳リソースを日本語と英語だけにする -->
+    <SatelliteResourceLanguages>ja;en</SatelliteResourceLanguages>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- 入り口（Main）は Program.cs に自前で書く（すでに開いているアプリにファイルを送るため） -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <!-- Win32 API の呼び出し（LibraryImport）に必要 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- 起動を速くするため、配布ビルドは Native AOT で事前コンパイルする -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishAot>true</PublishAot>
+    <OptimizationPreference>Speed</OptimizationPreference>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- まとめパッケージ（Microsoft.WindowsAppSDK）は AI・検索などを含み重いので、WinUI 本体だけを参照する -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.3.9" />
+    <!-- WinUI 2.3.9 が要求する 2.1.8 は公開されていないため、実在する 2.1.9 を明示する -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.InteractiveExperiences" Version="2.1.9" />
+    <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DotPixelPainter.Core\DotPixelPainter.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ウィンドウ（タイトルバー・タスクバー）のアイコン用に、出力先へコピーする -->
+    <Content Include="Assets\DotPixelPainter.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
