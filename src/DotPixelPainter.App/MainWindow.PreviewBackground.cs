@@ -1,3 +1,6 @@
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Brushes;
+using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.UI;
@@ -28,6 +31,52 @@ public sealed partial class MainWindow
         PreviewBackground.BackColor => ToColor(_backColor | 0xFF000000),
         _ => null,
     };
+
+    private const double TilePreviewHeight = 220;
+
+    private void TileToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (!IsSkinTab(CurrentTab))
+        {
+            PreviewCanvas.Height = TileToggle.IsChecked == true ? TilePreviewHeight : NormalPreviewHeight;
+        }
+
+        PreviewCanvas.Invalidate();
+    }
+
+    /// <summary>
+    /// 絵を 3×3 に並べて描く。ドットがにじまないよう、物理ピクセルの整数倍（入りきらないときは縮小）で描く。
+    /// </summary>
+    private void DrawTiledPreview(CanvasControl sender, CanvasDrawingSession ds, CanvasBitmap bitmap, Core.PixelDocument document)
+    {
+        float scale = sender.Dpi / 96f;
+        float availW = (float)sender.ActualWidth * scale;
+        float availH = (float)sender.ActualHeight * scale;
+        float fit = Math.Min(availW / (document.Width * 3), availH / (document.Height * 3));
+        float times = fit >= 1 ? MathF.Floor(Math.Min(fit, 4)) : fit;
+        float w = document.Width * times / scale;
+        float h = document.Height * times / scale;
+
+        if (PreviewBackgroundColor() is { } background)
+        {
+            ds.FillRectangle(0, 0, w * 3, h * 3, background);
+        }
+        else
+        {
+            CanvasImageBrush checker = GetChecker(sender);
+            checker.Transform = System.Numerics.Matrix3x2.Identity;
+            ds.FillRectangle(0, 0, w * 3, h * 3, checker);
+        }
+
+        var source = new Windows.Foundation.Rect(0, 0, document.Width, document.Height);
+        for (int ty = 0; ty < 3; ty++)
+        {
+            for (int tx = 0; tx < 3; tx++)
+            {
+                ds.DrawImage(bitmap, new Windows.Foundation.Rect(tx * w, ty * h, w, h), source, 1f, CanvasImageInterpolation.NearestNeighbor);
+            }
+        }
+    }
 
     private void PreviewBackground_Click(object sender, RoutedEventArgs e)
     {

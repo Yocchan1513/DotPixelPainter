@@ -109,8 +109,11 @@
                     <Border x:Name="PreviewSlot">
                     <StackPanel x:Name="PreviewSection" Spacing="8">
                         <Grid>
-                            <TextBlock x:Name="PreviewTitle" Text="プレビュー（等倍・2倍）" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock x:Name="PreviewTitle" Text="プレビュー" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
+                                <ToggleButton x:Name="TileToggle" Padding="6,4" Click="TileToggle_Click" ToolTipService.ToolTip="タイル表示（3×3 に並べて継ぎ目を確かめる）">
+                                    <FontIcon Glyph="&#xE80A;" FontSize="12" />
+                                </ToggleButton>
                                 <Button Padding="6,4" Click="PreviewBackground_Click" ToolTipService.ToolTip="プレビューの背景（市松模様・白・黒・灰色・背景色）">
                                     <FontIcon Glyph="&#xE790;" FontSize="12" />
                                 </Button>

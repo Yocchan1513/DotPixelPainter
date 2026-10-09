@@ -756,6 +756,12 @@ public sealed partial class MainWindow : Window
                     ErrorLog.Run("起動時のファイルを開く", OpenStartupFilesAsync);
                 }
 
+                if (_probe.TestOpen == "tile")
+                {
+                    TileToggle.IsChecked = true;
+                    TileToggle_Click(TileToggle, new RoutedEventArgs());
+                }
+
                 if (_probe.TestOpen == "new-document")
                 {
                     ErrorLog.Run("新規作成（テスト）", NewDocumentWithDialogAsync);
@@ -816,6 +822,12 @@ public sealed partial class MainWindow : Window
             }
 
             DrawSkin3D(sender, ds, bitmap, document);
+            return;
+        }
+
+        if (TileToggle.IsChecked == true)
+        {
+            DrawTiledPreview(sender, ds, bitmap, document);
             return;
         }
 

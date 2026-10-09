@@ -76,9 +76,9 @@ public sealed partial class MainWindow
             : "64×64 か 64×32 の画像で使えます");
         SkinOptions.Visibility = skin ? Visibility.Visible : Visibility.Collapsed;
         SlimToggle.IsChecked = tab?.Document.SlimArms == true;
-        PreviewTitle.Text = skin ? "3D プレビュー" : "プレビュー（等倍・2倍）";
-        ToolTipService.SetToolTip(PreviewCanvas, skin ? "ドラッグで回転、ダブルクリックで元の向き" : null);
-        PreviewCanvas.Height = skin ? SkinPreviewHeight : NormalPreviewHeight;
+        PreviewTitle.Text = skin ? "3D プレビュー" : "プレビュー";
+        ToolTipService.SetToolTip(PreviewCanvas, skin ? "ドラッグで回転、ダブルクリックで元の向き" : "等倍と2倍（タイル表示では 3×3 に並べる）");
+        PreviewCanvas.Height = skin ? SkinPreviewHeight : TileToggle.IsChecked == true ? TilePreviewHeight : NormalPreviewHeight;
         _skinHover = null;
         Canvas.Invalidate();
         PreviewCanvas.Invalidate();
