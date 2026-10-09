@@ -8,7 +8,11 @@ public sealed class DocumentTab
     public DocumentTab(PixelDocument document)
     {
         Document = document;
+        ShownSize = (document.Width, document.Height);
     }
+
+    /// <summary>最後に表示を合わせたときの画像の大きさ。元に戻すなどで大きさが変わったことに気づくために使う。</summary>
+    public (int Width, int Height) ShownSize { get; set; }
 
     public PixelDocument Document { get; }
 

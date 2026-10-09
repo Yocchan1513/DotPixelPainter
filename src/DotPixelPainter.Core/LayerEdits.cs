@@ -133,3 +133,31 @@ internal sealed class LayerPropertyEdit(Layer layer, LayerProperty property, obj
 
     private LayerProperty Property => property;
 }
+
+/// <summary>
+/// 画像全体の大きさ・向きの変更。すべてのレイヤーの前後の画像と、前後の大きさを持つ。
+/// レイヤーの画像そのものを差し替えるので、前後の履歴（ひと筆の記録など）はそれぞれの大きさのまま正しく戻せる。
+/// </summary>
+internal sealed class ImageTransformEdit(
+    PixelDocument document,
+    Layer[] layers,
+    PixelImage[] before,
+    PixelImage[] after,
+    (int Width, int Height) sizeBefore,
+    (int Width, int Height) sizeAfter) : HistoryEntry
+{
+    public override long ByteSize =>
+        before.Sum(i => i.Width * i.Height * 4L) + after.Sum(i => i.Width * i.Height * 4L) + 64;
+
+    internal override void Apply(bool undo)
+    {
+        PixelImage[] images = undo ? before : after;
+        for (int i = 0; i < layers.Length; i++)
+        {
+            layers[i].Image = images[i];
+        }
+
+        (int w, int h) = undo ? sizeBefore : sizeAfter;
+        document.SetSize(w, h);
+    }
+}

@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 namespace DotPixelPainter;
 
 /// <summary>
-/// 画面上端のメニューバー（Photoshop のような「ファイル・編集・…」）。
+/// 画面上端のメニューバー（Photoshop のような「ファイル・編集・画像・…」）。
 /// 起動を軽くするため、中身は最初の描画のあとで作る。ショートカットキーは別に登録してあるので、
 /// ここではキーの表示だけを付ける。
 /// </summary>
@@ -31,6 +31,7 @@ public sealed partial class MainWindow
         FileMenu.Items.Add(new MenuFlyoutSeparator());
         Add(FileMenu, "保存", "Ctrl+S", () => ErrorLog.Run("保存", SaveCurrentAsync));
         Add(FileMenu, "別名で保存...", "Ctrl+Shift+S", () => ErrorLog.Run("別名で保存", SaveCurrentAsAsync));
+        Add(FileMenu, "拡大して書き出し...", null, () => ErrorLog.Run("拡大して書き出し", ExportScaledAsync));
         FileMenu.Items.Add(new MenuFlyoutSeparator());
         Add(FileMenu, "タブを閉じる", "Ctrl+W", () =>
         {
@@ -50,6 +51,25 @@ public sealed partial class MainWindow
         Add(EditMenu, "切り取り", "Ctrl+X", () => ErrorLog.Run("切り取り", () => CopyAsync(cut: true)));
         Add(EditMenu, "コピー", "Ctrl+C", () => ErrorLog.Run("コピー", () => CopyAsync(cut: false)));
         Add(EditMenu, "貼り付け", "Ctrl+V", () => ErrorLog.Run("貼り付け", PasteAsync));
+
+        // 画像
+        Add(ImageMenu, "画像の大きさ...", null, () => ErrorLog.Run("画像の大きさ", ShowScaleDialogAsync));
+        Add(ImageMenu, "キャンバスの大きさ...", null, () => ErrorLog.Run("キャンバスの大きさ", ShowCanvasSizeDialogAsync));
+        Add(ImageMenu, "選択範囲で切り抜く", null, () =>
+        {
+            if (CurrentTab is { Selection: null })
+            {
+                ErrorLog.Run("切り抜き", () => ShowMessageAsync("切り抜けません", "先に、選択ツールで残したい範囲を選んでください。"));
+                return;
+            }
+
+            CropToSelection();
+        });
+        ImageMenu.Items.Add(new MenuFlyoutSeparator());
+        Add(ImageMenu, "左右反転", null, () => ImageAction(d => d.FlipImage(horizontal: true)));
+        Add(ImageMenu, "上下反転", null, () => ImageAction(d => d.FlipImage(horizontal: false)));
+        Add(ImageMenu, "右に90°回転", null, () => ImageAction(d => d.RotateImage(clockwise: true)));
+        Add(ImageMenu, "左に90°回転", null, () => ImageAction(d => d.RotateImage(clockwise: false)));
 
         // 選択範囲
         Add(SelectMenu, "すべて選択", "Ctrl+A", SelectAll);

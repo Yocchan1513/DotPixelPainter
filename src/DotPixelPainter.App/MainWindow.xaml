@@ -32,6 +32,7 @@
             </MenuBar.Resources>
             <MenuBarItem x:Name="FileMenu" Title="ファイル(F)" AccessKey="F" />
             <MenuBarItem x:Name="EditMenu" Title="編集(E)" AccessKey="E" />
+            <MenuBarItem x:Name="ImageMenu" Title="画像(I)" AccessKey="I" />
             <MenuBarItem x:Name="SelectMenu" Title="選択範囲(S)" AccessKey="S" />
             <MenuBarItem x:Name="LayerMenu" Title="レイヤー(L)" AccessKey="L" />
             <MenuBarItem x:Name="ViewMenu" Title="表示(V)" AccessKey="V" />

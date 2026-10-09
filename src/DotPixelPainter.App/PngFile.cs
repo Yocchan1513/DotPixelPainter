@@ -48,9 +48,15 @@ public static class PngFile
     }
 
     /// <summary>表示中のレイヤーを統合して1枚のPNGとして保存する。</summary>
-    public static async Task SaveAsync(PixelDocument document, StorageFile file)
+    /// <summary>表示どおりに1枚にまとめて PNG で保存する。scale が 2 以上なら、ドットのまま整数倍に拡大して書き出す。</summary>
+    public static async Task SaveAsync(PixelDocument document, StorageFile file, int scale = 1)
     {
         PixelImage image = document.Composite();
+        if (scale > 1)
+        {
+            image = ImageTransform.ScaleNearest(image, image.Width * scale, image.Height * scale);
+        }
+
         var bytes = new byte[image.Width * image.Height * 4];
         image.CopyToBgra(bytes);
 
