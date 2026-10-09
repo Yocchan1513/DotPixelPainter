@@ -98,12 +98,34 @@
                 BorderThickness="1,0,0,0">
                 <!-- ウィンドウが低いときはスクロールできるようにする -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="プレビュー（等倍・2倍）" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <win2d:CanvasControl x:Name="PreviewCanvas" Height="140" Draw="PreviewCanvas_Draw" />
+                <StackPanel Spacing="12">
+                    <!--
+                        パネル: 外側の Border（*Slot）が置き場所、内側の StackPanel（*Section）が中身。
+                        切り離すと Section だけが別ウィンドウへ移り、Slot は隠れる。
+                    -->
+                    <Border x:Name="PreviewSlot">
+                    <StackPanel x:Name="PreviewSection" Spacing="8">
+                        <Grid>
+                            <TextBlock Text="プレビュー（等倍・2倍）" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <Button x:Name="PreviewDetachButton" Tag="preview" HorizontalAlignment="Right" Padding="6,4" Click="PanelDetach_Click">
+                                <FontIcon Glyph="&#xE8A7;" FontSize="12" />
+                            </Button>
+                        </Grid>
+                        <win2d:CanvasControl x:Name="PreviewCanvas" Height="140" Draw="PreviewCanvas_Draw" />
+                    </StackPanel>
+                    </Border>
+
+                    <Border x:Name="ColorSlot">
+                    <StackPanel x:Name="ColorSection" Spacing="8">
+                    <Grid>
+                        <TextBlock Text="カラー" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <Button x:Name="ColorDetachButton" Tag="color" HorizontalAlignment="Right" Padding="6,4" Click="PanelDetach_Click">
+                            <FontIcon Glyph="&#xE8A7;" FontSize="12" />
+                        </Button>
+                    </Grid>
 
                     <!-- 色: 描画色と背景色、色コード、RGB/HSV の切り替え -->
-                    <Grid Margin="0,4,0,0" ColumnSpacing="10">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
@@ -176,11 +198,18 @@
                         Value="1"
                         ValueChanged="BrushSizeSlider_ValueChanged"
                         ToolTipService.ToolTip="ペン先の大きさ（[ と ] でも変えられる）" />
+                    </StackPanel>
+                    </Border>
 
                     <!-- パレット -->
-                    <Grid Margin="0,4,0,0">
+                    <Border x:Name="PaletteSlot">
+                    <StackPanel x:Name="PaletteSection" Spacing="8">
+                    <Grid>
                         <TextBlock Text="パレット" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
+                            <Button x:Name="PaletteDetachButton" Tag="palette" Padding="6,4" Click="PanelDetach_Click">
+                                <FontIcon Glyph="&#xE8A7;" FontSize="12" />
+                            </Button>
                             <Button Content="＋" Padding="8,2" Click="AddColor_Click" ToolTipService.ToolTip="描画色をパレットに追加" />
                             <Button Content="…" Padding="8,2" ToolTipService.ToolTip="パレットの読み込み・書き出し">
                                 <Button.Flyout>
@@ -204,6 +233,8 @@
                         Text="Alt+クリックでスポイト"
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    </Border>
                 </StackPanel>
                 </ScrollViewer>
             </Border>

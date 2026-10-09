@@ -64,9 +64,22 @@ public sealed partial class MainWindow : Window
         BuildToolPanel();
         _probe.Mark("tools");
         AddKeyboardShortcuts();
+        InitializePanels();
         AddTab(CreateUntitled());
         _probe.Mark("tab");
         Root.Loaded += (_, _) => _probe.Mark("loaded");
+
+        // 倍率を手で変えていないタブは、キャンバスの大きさが変わったら倍率を選び直す
+        Canvas.SizeChanged += (_, _) =>
+        {
+            foreach (DocumentTab tab in _tabs.Values)
+            {
+                if (tab.AutoZoom)
+                {
+                    tab.Zoom = 0;
+                }
+            }
+        };
     }
 
     private enum DragMode
@@ -243,7 +256,26 @@ public sealed partial class MainWindow : Window
         AddShortcut(VirtualKey.Tab, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => SelectRelativeTab(-1));
     }
 
+    private readonly List<(VirtualKey Key, VirtualKeyModifiers Modifiers, Action Action)> _shortcuts = [];
+
     private void AddShortcut(VirtualKey key, VirtualKeyModifiers modifiers, Action action)
+    {
+        _shortcuts.Add((key, modifiers, action));
+        AttachShortcut(Root, key, modifiers, action);
+    }
+
+    /// <summary>切り離したパネルのウィンドウでも、同じショートカットキーが効くようにする。</summary>
+    private void AttachShortcuts(UIElement target)
+    {
+        foreach (var (key, modifiers, action) in _shortcuts)
+        {
+            AttachShortcut(target, key, modifiers, action);
+        }
+
+        target.KeyDown += Root_KeyDown;
+    }
+
+    private static void AttachShortcut(UIElement target, VirtualKey key, VirtualKeyModifiers modifiers, Action action)
     {
         var accelerator = new KeyboardAccelerator { Key = key, Modifiers = modifiers };
         accelerator.Invoked += (_, e) =>
@@ -251,7 +283,7 @@ public sealed partial class MainWindow : Window
             e.Handled = true;
             action();
         };
-        Root.KeyboardAccelerators.Add(accelerator);
+        target.KeyboardAccelerators.Add(accelerator);
     }
 
     private void New_Click(object sender, RoutedEventArgs e) => ErrorLog.Run("新規作成", NewDocumentWithDialogAsync);
@@ -551,9 +583,17 @@ public sealed partial class MainWindow : Window
                     return;
                 }
 
+                RestorePanelLayout();
+
                 if (_probe.TestOpen == "new-document")
                 {
                     ErrorLog.Run("新規作成（テスト）", NewDocumentWithDialogAsync);
+                }
+                else if (_probe.TestOpen?.StartsWith("detach:", StringComparison.Ordinal) == true
+                    && _panels.TryGetValue(_probe.TestOpen["detach:".Length..], out DockPanel? panel)
+                    && panel.Floating is null)
+                {
+                    Detach(panel, null);
                 }
             });
         }
@@ -658,6 +698,7 @@ public sealed partial class MainWindow : Window
         if (props.IsMiddleButtonPressed)
         {
             _drag = DragMode.Pan;
+            tab.AutoZoom = false;
             _panStart = point.Position;
             _panStartX = tab.PanX;
             _panStartY = tab.PanY;
@@ -822,6 +863,7 @@ public sealed partial class MainWindow : Window
         float viewH = (float)Canvas.ActualHeight * scale;
 
         tab.Zoom = newZoom;
+        tab.AutoZoom = false;
         tab.PanX = cx - u * newZoom - (viewW - tab.Document.Width * newZoom) / 2;
         tab.PanY = cy - v * newZoom - (viewH - tab.Document.Height * newZoom) / 2;
         Canvas.Invalidate();

@@ -18,6 +18,12 @@ public sealed class DocumentTab
     /// </summary>
     public int Zoom { get; set; }
 
+    /// <summary>
+    /// 倍率を一度も手で変えていない（表示位置も動かしていない）か。
+    /// true の間は、ウィンドウの大きさが変わったら倍率を選び直す。
+    /// </summary>
+    public bool AutoZoom { get; set; } = true;
+
     /// <summary>中央配置からのずれ（物理ピクセル）。</summary>
     public float PanX { get; set; }
 

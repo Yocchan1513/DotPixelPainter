@@ -24,6 +24,7 @@ public sealed class StartupProbe
 
     /// <summary>
     /// 開発用。`--test-open new-document` で起動すると、最初の描画のあとに新規作成ダイアログを開く。
+    /// `--test-open detach:color`（preview / color / palette）ならそのパネルを切り離す（保存はしない）。
     /// マウスやキーボードを動かさずに、ダイアログの見た目を撮影して確かめるために使う。
     /// </summary>
     public string? TestOpen { get; }
