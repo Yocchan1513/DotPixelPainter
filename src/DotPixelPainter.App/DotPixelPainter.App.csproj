@@ -45,6 +45,14 @@
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
   </ItemGroup>
 
+  <!--
+    軽量版（-p:WindowsAppSDKSelfContained=false）だけ: Windows App SDK を同梱せず、PC に入っている
+    Windows App Runtime 2.5 を使う。版は まとめパッケージ 2.5.1 が WinUI 2.3.9 と組み合わせているものに合わせる。
+  -->
+  <ItemGroup Condition="'$(WindowsAppSDKSelfContained)' == 'false'">
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.5.1" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\DotPixelPainter.Core\DotPixelPainter.Core.csproj" />
   </ItemGroup>

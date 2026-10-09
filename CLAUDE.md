@@ -46,7 +46,8 @@ tools/measure-startup.ps1   起動時間の計測
 ## 版の上げ方
 
 - 版は `src/DotPixelPainter.App/DotPixelPainter.App.csproj` の `<Version>` で決める（ステータスバーとバージョン情報に出る）。
-- 上げたら、リポジトリ直下の `latest-version.txt` も同じ番号にして main に入れる。「バージョン情報」はこのファイルを GitHub から読んで、最新かどうかを知らせる（リポジトリが公開されているときだけ読める）。
+- 上げたら、リポジトリ直下の `latest-version.txt` も同じ番号にして main に入れる。
+- 配布用の zip は `./tools/package.ps1` で作る（x64・ARM64 × 完全版・軽量版の4つ。出力は artifacts/package/）。GitHub の Releases に `v<版>` のタグで置く。latest-version.txt を上げるのは、Releases に置いたあとにする（先に上げると、まだ置いていない版を案内してしまう）。「バージョン情報」はこのファイルを GitHub から読んで、最新かどうかを知らせる（リポジトリが公開されているときだけ読める）。
 
 ## ビルドとテスト
 
