@@ -45,6 +45,7 @@ public sealed partial class MainWindow
             ToolTipService.SetToolTip(eye, layer.Visible ? "非表示にする" : "表示する");
             eye.Tapped += (_, e) =>
             {
+                CommitFloating(tab);
                 document.SetLayerVisible(index, !document.Layers[index].Visible);
                 AfterHistoryChange(tab);
                 e.Handled = true;
@@ -85,6 +86,7 @@ public sealed partial class MainWindow
 
             row.Tapped += (_, _) =>
             {
+                CommitFloating(tab);
                 EndStroke();
                 document.SelectLayer(index);
                 RefreshLayerList();
@@ -125,6 +127,7 @@ public sealed partial class MainWindow
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
+            CommitFloating(tab);
             tab.Document.RenameLayer(index, box.Text);
             AfterHistoryChange(tab);
         }
@@ -133,6 +136,7 @@ public sealed partial class MainWindow
     /// <summary>レイヤーの操作をして、成功したら画面を更新する。</summary>
     private void LayerAction(Func<PixelDocument, int, bool> action)
     {
+        CommitFloating(CurrentTab); // 持ち上げ中の中身は、レイヤーを操作する前に置く
         EndStroke();
         if (CurrentTab is { } tab && action(tab.Document, tab.Document.ActiveLayerIndex))
         {
@@ -161,6 +165,7 @@ public sealed partial class MainWindow
         }
 
         LayerOpacityText.Text = $"不透明度 {e.NewValue}%";
+        CommitFloating(tab);
         PixelDocument document = tab.Document;
         document.SetLayerOpacity(document.ActiveLayerIndex, e.NewValue / 100.0);
         AfterHistoryChange(tab);

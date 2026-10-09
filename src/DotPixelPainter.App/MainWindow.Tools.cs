@@ -20,6 +20,7 @@ public enum Tool
     Eraser,
     Fill,
     Picker,
+    Select,
 }
 
 public enum ShapeKind
@@ -49,6 +50,7 @@ public sealed partial class MainWindow
         Tool.Pencil => "鉛筆",
         Tool.Eraser => "消しゴム",
         Tool.Fill => "塗りつぶし",
+        Tool.Select => "選択",
         _ => "スポイト",
     };
 
@@ -70,6 +72,7 @@ public sealed partial class MainWindow
         AddToolButton(Tool.Pencil, Glyph(""), "B");
         AddToolButton(Tool.Eraser, Glyph(""), "E");
         AddToolButton(Tool.Fill, DropIcon(), "G");
+        AddToolButton(Tool.Select, new Rectangle { Width = 15, Height = 13, Stroke = IconBrush, StrokeThickness = 1.4, StrokeDashArray = { 2, 1.5 } }, "M");
         AddToolButton(Tool.Picker, Glyph(""), "I");
 
         AddShapeButton(ShapeKind.Freehand, FreehandIcon(), "1");
@@ -140,6 +143,11 @@ public sealed partial class MainWindow
 
     private void SelectTool(Tool tool)
     {
+        if (tool != Tool.Select)
+        {
+            CommitFloating(CurrentTab); // 選択ツールから離れたら、持ち上げ中の中身を置く
+        }
+
         EndStroke();
         _tool = tool;
         UpdateToolButtons();
@@ -183,6 +191,13 @@ public sealed partial class MainWindow
             case VirtualKey.E: SelectTool(Tool.Eraser); break;
             case VirtualKey.G: SelectTool(Tool.Fill); break;
             case VirtualKey.I: SelectTool(Tool.Picker); break;
+            case VirtualKey.M: SelectTool(Tool.Select); break;
+            case VirtualKey.Escape: Deselect(); break;
+            case VirtualKey.Delete when DeleteSelection(): break;
+            case VirtualKey.Left when NudgeSelection(-NudgeStep(), 0): break;
+            case VirtualKey.Right when NudgeSelection(NudgeStep(), 0): break;
+            case VirtualKey.Up when NudgeSelection(0, -NudgeStep()): break;
+            case VirtualKey.Down when NudgeSelection(0, NudgeStep()): break;
             case VirtualKey.Number1: SelectShape(ShapeKind.Freehand); break;
             case VirtualKey.Number2: SelectShape(ShapeKind.Line); break;
             case VirtualKey.Number3: SelectShape(ShapeKind.Rectangle); break;
@@ -199,6 +214,9 @@ public sealed partial class MainWindow
         e.Handled = true;
     }
 
+    /// <summary>矢印キーで動かす量。Shift を押していれば 8px。</summary>
+    private static int NudgeStep() => IsModifierDown(VirtualKey.Shift) ? 8 : 1;
+
     private static bool IsModifierDown(VirtualKey key) =>
         InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(CoreVirtualKeyStates.Down);
 
@@ -207,6 +225,12 @@ public sealed partial class MainWindow
     /// <summary>描画系の押下を処理する。描き始めたら true（ポインタをキャプチャする）。</summary>
     private bool BeginToolAction(DocumentTab tab, (int X, int Y) p, bool erase)
     {
+        if (_tool == Tool.Select)
+        {
+            BeginSelectAction(tab, p);
+            return true;
+        }
+
         uint color = erase || _tool == Tool.Eraser ? 0u : _color;
 
         if (_tool == Tool.Picker)

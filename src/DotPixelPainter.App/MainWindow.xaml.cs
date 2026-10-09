@@ -88,6 +88,8 @@ public sealed partial class MainWindow : Window
         Paint,
         Pan,
         Shape,
+        SelectRect,
+        MoveSelection,
     }
 
     private DocumentTab? CurrentTab =>
@@ -150,6 +152,7 @@ public sealed partial class MainWindow : Window
     private async Task CloseTabAsync(TabViewItem item)
     {
         DocumentTab tab = _tabs[item];
+        CommitFloating(tab);
         if (tab.Document.IsDirty)
         {
             var dialog = new ContentDialog
@@ -205,6 +208,7 @@ public sealed partial class MainWindow : Window
 
     private void Tabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        CommitAllFloating();
         EndStroke();
         RedrawAll();
         UpdateUndoButtons();
@@ -243,6 +247,8 @@ public sealed partial class MainWindow : Window
         AddShortcut(VirtualKey.Z, VirtualKeyModifiers.Control, Undo);
         AddShortcut(VirtualKey.Y, VirtualKeyModifiers.Control, Redo);
         AddShortcut(VirtualKey.Z, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, Redo);
+        AddShortcut(VirtualKey.A, VirtualKeyModifiers.Control, SelectAll);
+        AddShortcut(VirtualKey.D, VirtualKeyModifiers.Control, Deselect);
         AddShortcut(VirtualKey.N, VirtualKeyModifiers.Control, () => ErrorLog.Run("新規作成", NewDocumentWithDialogAsync));
         AddShortcut(VirtualKey.O, VirtualKeyModifiers.Control, () => ErrorLog.Run("開く", OpenAsync));
         AddShortcut(VirtualKey.S, VirtualKeyModifiers.Control, () => ErrorLog.Run("保存", SaveCurrentAsync));
@@ -281,6 +287,12 @@ public sealed partial class MainWindow : Window
         var accelerator = new KeyboardAccelerator { Key = key, Modifiers = modifiers };
         accelerator.Invoked += (_, e) =>
         {
+            // 文字入力欄では Ctrl+A（全選択）や Ctrl+Z（入力の取り消し）を入力欄に任せる
+            if (target.XamlRoot is not null && FocusManager.GetFocusedElement(target.XamlRoot) is TextBox)
+            {
+                return;
+            }
+
             e.Handled = true;
             action();
         };
@@ -307,6 +319,7 @@ public sealed partial class MainWindow : Window
 
     private void Undo()
     {
+        CommitFloating(CurrentTab); // 持ち上げ中の移動を確定してから、それを戻す
         EndStroke();
         if (CurrentTab is { } tab && tab.Document.History.Undo())
         {
@@ -316,6 +329,7 @@ public sealed partial class MainWindow : Window
 
     private void Redo()
     {
+        CommitFloating(CurrentTab);
         EndStroke();
         if (CurrentTab is { } tab && tab.Document.History.Redo())
         {
@@ -374,6 +388,7 @@ public sealed partial class MainWindow : Window
 
     private async Task<bool> SaveAsync(DocumentTab tab)
     {
+        CommitFloating(tab);
         PixelDocument document = tab.Document;
         StorageFile? file = null;
         try
@@ -446,7 +461,7 @@ public sealed partial class MainWindow : Window
             return _bitmap;
         }
 
-        PixelImage composite = document.Composite();
+        PixelImage composite = document.Composite(tab.Floating);
         int length = document.Width * document.Height * 4;
         if (_pixelBuffer.Length != length)
         {
@@ -572,6 +587,7 @@ public sealed partial class MainWindow : Window
         }
 
         ds.DrawRectangle(rect, FrameColor, 1 / scale);
+        DrawSelectionFrame(ds, tab, rect, tab.Zoom / scale, 1 / scale);
 
         if (!_firstFrameReported)
         {
@@ -752,6 +768,10 @@ public sealed partial class MainWindow : Window
                 (_lastX, _lastY) = (x, y);
             }
         }
+        else if (_drag is DragMode.SelectRect or DragMode.MoveSelection)
+        {
+            UpdateSelectDrag(tab, (x, y));
+        }
         else if (_drag == DragMode.Shape)
         {
             UpdateShapeEnd((x, y), e.KeyModifiers.HasFlag(VirtualKeyModifiers.Shift));
@@ -767,6 +787,11 @@ public sealed partial class MainWindow : Window
 
     private void Canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        if (_drag is DragMode.SelectRect or DragMode.MoveSelection && CurrentTab is { } selectTab)
+        {
+            EndSelectDrag(selectTab, ToImage(selectTab, e.GetCurrentPoint(Canvas).Position));
+        }
+
         if (_drag == DragMode.Shape)
         {
             _drag = DragMode.None;

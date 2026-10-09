@@ -29,6 +29,14 @@ public sealed class DocumentTab
 
     public float PanY { get; set; }
 
+    /// <summary>選択範囲（なければ null）。</summary>
+    public PixelRect? Selection { get; set; }
+
+    /// <summary>選択範囲から持ち上げて移動中の中身と、その記録（確定するまで履歴には積まない）。</summary>
+    public FloatingSelection? Floating { get; set; }
+
+    public PixelStroke? FloatStroke { get; set; }
+
     /// <summary>合成画像を作り直す必要があるか。</summary>
     public bool ImageChanged { get; set; } = true;
 

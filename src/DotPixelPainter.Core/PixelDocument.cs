@@ -158,18 +158,29 @@ public sealed class PixelDocument
 
     internal void SetActive(int index) => ActiveLayerIndex = Math.Clamp(index, 0, _layers.Count - 1);
 
-    /// <summary>表示中のレイヤーを下から順に通常合成した画像を作る。</summary>
-    public PixelImage Composite()
+    /// <summary>
+    /// 表示中のレイヤーを下から順に通常合成した画像を作る。
+    /// floating を渡すと、アクティブなレイヤーにそれを重ねた状態で合成する（移動中の表示用）。
+    /// </summary>
+    public PixelImage Composite(FloatingSelection? floating = null)
     {
         var result = new PixelImage(Width, Height);
-        foreach (var layer in _layers)
+        for (int i = 0; i < _layers.Count; i++)
         {
+            Layer layer = _layers[i];
             if (!layer.Visible || layer.Opacity <= 0)
             {
                 continue;
             }
 
-            Blend.Normal(result, layer.Image, layer.Opacity);
+            PixelImage image = layer.Image;
+            if (floating is not null && i == ActiveLayerIndex)
+            {
+                image = image.Clone();
+                floating.DrawOnto(image);
+            }
+
+            Blend.Normal(result, image, layer.Opacity);
         }
 
         return result;
