@@ -241,7 +241,7 @@ public sealed partial class MainWindow
 
         if (_tool == Tool.Fill)
         {
-            PixelStroke fill = tab.Document.BeginStroke();
+            PixelStroke fill = tab.Document.BeginStroke(_mask);
             if (fill.FloodFill(p.X, p.Y, color) > 0)
             {
                 fill.Commit();
@@ -256,7 +256,7 @@ public sealed partial class MainWindow
         if (_shape == ShapeKind.Freehand)
         {
             _drag = DragMode.Paint;
-            _stroke = tab.Document.BeginStroke();
+            _stroke = tab.Document.BeginStroke(_mask);
             (_lastX, _lastY) = p;
             Paint(tab, [p]);
         }
@@ -331,7 +331,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        PixelStroke stroke = tab.Document.BeginStroke();
+        PixelStroke stroke = tab.Document.BeginStroke(_mask);
         if (stroke.PlotSpans(CurrentShapeSpans(), _paintColor))
         {
             stroke.Commit();

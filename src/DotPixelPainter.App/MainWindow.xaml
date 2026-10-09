@@ -218,6 +218,21 @@
                         Value="1"
                         ValueChanged="BrushSizeSlider_ValueChanged"
                         ToolTipService.ToolTip="ペン先の大きさ（[ と ] でも変えられる）" />
+
+                    <!-- カラーマスク（AzPainter2 のマスク／逆マスクにあたる） -->
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock Text="カラーマスク" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox x:Name="MaskModeBox" HorizontalAlignment="Right" MinWidth="110" SelectedIndex="0" SelectionChanged="MaskMode_SelectionChanged">
+                            <ComboBoxItem Content="オフ" />
+                            <ComboBoxItem Content="指定色を保護" />
+                            <ComboBoxItem Content="指定色だけ" />
+                        </ComboBox>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <StackPanel x:Name="MaskSwatches" Orientation="Horizontal" Spacing="3" VerticalAlignment="Center" />
+                        <Button Content="＋" Padding="8,2" Click="MaskAdd_Click" ToolTipService.ToolTip="描画色をマスクの色に追加（8色まで。色をクリックで外す）" />
+                        <Button Content="×" Padding="8,2" Click="MaskClear_Click" ToolTipService.ToolTip="マスクの色をすべて外す" />
+                    </StackPanel>
                     </StackPanel>
                     </Border>
 

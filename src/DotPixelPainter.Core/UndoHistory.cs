@@ -153,14 +153,17 @@ public sealed class PixelStroke
     private readonly Dictionary<int, uint> _before = [];
     private bool _committed;
 
-    internal PixelStroke(PixelDocument document, Layer layer)
+    private readonly ColorMask? _mask;
+
+    internal PixelStroke(PixelDocument document, Layer layer, ColorMask? mask = null)
     {
         _document = document;
         _layer = layer;
         _image = layer.Image;
+        _mask = mask is { IsActive: true } ? mask : null;
     }
 
-    /// <summary>1画素を塗る。色が変わったら true。</summary>
+    /// <summary>1画素を塗る。色が変わったら true。カラーマスクで禁止された画素には塗らない。</summary>
     public bool Plot(int x, int y, uint argb)
     {
         if (_committed || !_image.Contains(x, y))
@@ -168,13 +171,21 @@ public sealed class PixelStroke
             return false;
         }
 
+        int index = y * _image.Width + x;
         uint old = _image.GetPixel(x, y);
+
+        // マスクは「このひと筆で描く前の色」で判断する（同じ筆で重ねて塗っても判断が変わらないように）
+        if (_mask is not null && !_mask.Allows(_before.TryGetValue(index, out uint original) ? original : old))
+        {
+            return false;
+        }
+
         if (old == argb)
         {
             return false;
         }
 
-        _before.TryAdd(y * _image.Width + x, old);
+        _before.TryAdd(index, old);
         _image.SetPixel(x, y, argb);
         return true;
     }

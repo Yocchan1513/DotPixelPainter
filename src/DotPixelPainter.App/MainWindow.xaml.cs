@@ -1087,7 +1087,7 @@ public sealed partial class MainWindow : Window
         ZoomText.Text = $"{tab.Zoom * 100}%";
         string pos = position is { } p && tab.Document.ActiveLayer.Image.Contains(p.X, p.Y) ? $"{p.X}, {p.Y}" : "-";
         string skin = IsSkinTab(tab) && SkinStatus() is { Length: > 0 } part ? $"　｜　{part}" : "";
-        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}　｜　{tab.Document.ActiveLayer.Name}";
+        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}";
     }
 
     private static Color ToColor(uint argb) =>
