@@ -40,8 +40,9 @@
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="0,0,0,1">
             <Button Content="新規" Click="New_Click" ToolTipService.ToolTip="新規 (Ctrl+N)" />
-            <Button Content="開く" Click="Open_Click" ToolTipService.ToolTip="PNGを開く (Ctrl+O)" />
-            <Button Content="保存" Click="Save_Click" ToolTipService.ToolTip="PNGで保存 (Ctrl+S)" />
+            <Button Content="開く" Click="Open_Click" ToolTipService.ToolTip=".dotpix / PNG を開く (Ctrl+O)" />
+            <Button Content="保存" Click="Save_Click" ToolTipService.ToolTip="上書き保存 (Ctrl+S)" />
+            <Button Content="別名で保存" Click="SaveAs_Click" ToolTipService.ToolTip=".dotpix（レイヤーを残す）か PNG（1枚にまとめる）で保存 (Ctrl+Shift+S)" />
             <AppBarSeparator />
             <Button x:Name="UndoButton" Content="元に戻す" Click="Undo_Click" IsEnabled="False" ToolTipService.ToolTip="元に戻す (Ctrl+Z)" />
             <Button x:Name="RedoButton" Content="やり直し" Click="Redo_Click" IsEnabled="False" ToolTipService.ToolTip="やり直し (Ctrl+Y / Ctrl+Shift+Z)" />

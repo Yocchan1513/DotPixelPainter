@@ -252,6 +252,7 @@ public sealed partial class MainWindow : Window
         AddShortcut(VirtualKey.N, VirtualKeyModifiers.Control, () => ErrorLog.Run("新規作成", NewDocumentWithDialogAsync));
         AddShortcut(VirtualKey.O, VirtualKeyModifiers.Control, () => ErrorLog.Run("開く", OpenAsync));
         AddShortcut(VirtualKey.S, VirtualKeyModifiers.Control, () => ErrorLog.Run("保存", SaveCurrentAsync));
+        AddShortcut(VirtualKey.S, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => ErrorLog.Run("別名で保存", SaveCurrentAsAsync));
         AddShortcut(VirtualKey.W, VirtualKeyModifiers.Control, () =>
         {
             if (Tabs.SelectedItem is TabViewItem item)
@@ -304,6 +305,8 @@ public sealed partial class MainWindow : Window
     private void Open_Click(object sender, RoutedEventArgs e) => ErrorLog.Run("開く", OpenAsync);
 
     private void Save_Click(object sender, RoutedEventArgs e) => ErrorLog.Run("保存", SaveCurrentAsync);
+
+    private void SaveAs_Click(object sender, RoutedEventArgs e) => ErrorLog.Run("別名で保存", SaveCurrentAsAsync);
 
     private void ZoomIn_Click(object sender, RoutedEventArgs e) => ZoomAtCenter(1);
 
@@ -361,6 +364,7 @@ public sealed partial class MainWindow : Window
     {
         var picker = new FileOpenPicker();
         InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+        picker.FileTypeFilter.Add(DotPixFile.Extension);
         picker.FileTypeFilter.Add(".png");
         StorageFile? file = await picker.PickSingleFileAsync();
         if (file is null)
@@ -370,12 +374,61 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            AddTab(await PngFile.LoadAsync(file));
+            AddTab(await LoadDocumentAsync(file));
         }
         catch (Exception ex)
         {
             await ShowMessageAsync("開けませんでした", ex.Message);
         }
+    }
+
+    /// <summary>起動時に渡されたファイルを開く。何も描いていない最初の「無題」タブは閉じる。</summary>
+    private async Task OpenStartupFilesAsync()
+    {
+        TabViewItem? blank = Tabs.TabItems.Count == 1
+            && Tabs.TabItems[0] is TabViewItem only
+            && _tabs[only].Document.FilePath is null
+            && !_tabs[only].Document.History.CanUndo ? only : null;
+
+        bool opened = false;
+        foreach (string path in _probe.FilesToOpen)
+        {
+            try
+            {
+                AddTab(await LoadDocumentAsync(await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path))));
+                opened = true;
+            }
+            catch (Exception ex)
+            {
+                await ShowMessageAsync("開けませんでした", $"{path}\n{ex.Message}");
+            }
+        }
+
+        if (opened && blank is not null)
+        {
+            Tabs.TabItems.Remove(blank);
+            _tabs.Remove(blank);
+        }
+    }
+
+    private static bool IsDotPix(string path) =>
+        string.Equals(Path.GetExtension(path), DotPixFile.Extension, StringComparison.OrdinalIgnoreCase);
+
+    private static async Task<PixelDocument> LoadDocumentAsync(StorageFile file)
+    {
+        if (!IsDotPix(file.Path))
+        {
+            return await PngFile.LoadAsync(file);
+        }
+
+        // インストール不要のアプリなので、ファイルは普通にパスで読める
+        PixelDocument document = await Task.Run(() =>
+        {
+            using FileStream stream = File.OpenRead(file.Path);
+            return DotPixFile.Read(stream, file.Name);
+        });
+        document.FilePath = file.Path;
+        return document;
     }
 
     private async Task SaveCurrentAsync()
@@ -386,14 +439,26 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task<bool> SaveAsync(DocumentTab tab)
+    private async Task SaveCurrentAsAsync()
+    {
+        if (CurrentTab is { } tab)
+        {
+            await SaveAsync(tab, saveAs: true);
+        }
+    }
+
+    /// <summary>
+    /// 保存する。.dotpix ならレイヤーごと、.png なら表示どおりに1枚にまとめて保存する。
+    /// まだ保存先がないとき、または saveAs のときは保存先を選んでもらう（.dotpix が先頭の候補）。
+    /// </summary>
+    private async Task<bool> SaveAsync(DocumentTab tab, bool saveAs = false)
     {
         CommitFloating(tab);
         PixelDocument document = tab.Document;
         StorageFile? file = null;
         try
         {
-            if (document.FilePath is not null)
+            if (!saveAs && document.FilePath is not null)
             {
                 file = await StorageFile.GetFileFromPathAsync(document.FilePath);
             }
@@ -407,9 +472,15 @@ public sealed partial class MainWindow : Window
         {
             var picker = new FileSavePicker { SuggestedFileName = Path.GetFileNameWithoutExtension(document.Name) };
             InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
-            picker.FileTypeChoices.Add("PNG 画像", [".png"]);
+            picker.FileTypeChoices.Add("DotPixelPainter（レイヤーを残す）", [DotPixFile.Extension]);
+            picker.FileTypeChoices.Add("PNG 画像（1枚にまとめる）", [".png"]);
             file = await picker.PickSaveFileAsync();
             if (file is null)
+            {
+                return false;
+            }
+
+            if (!IsDotPix(file.Path) && document.Layers.Count > 1 && !await ConfirmFlattenAsync())
             {
                 return false;
             }
@@ -417,7 +488,25 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            await PngFile.SaveAsync(document, file);
+            if (IsDotPix(file.Path))
+            {
+                string path = file.Path;
+                await Task.Run(() =>
+                {
+                    // 途中で失敗しても元のファイルを壊さないよう、一時ファイルに書いてから置き換える
+                    string temp = path + ".saving";
+                    using (FileStream stream = File.Create(temp))
+                    {
+                        DotPixFile.Write(document, stream);
+                    }
+
+                    File.Move(temp, path, overwrite: true);
+                });
+            }
+            else
+            {
+                await PngFile.SaveAsync(document, file);
+            }
         }
         catch (Exception ex)
         {
@@ -430,6 +519,21 @@ public sealed partial class MainWindow : Window
         document.MarkSaved();
         RefreshHeader(tab);
         return true;
+    }
+
+    /// <summary>レイヤーが複数あるときに PNG で保存しようとしたら、1枚にまとまることを確かめる。</summary>
+    private async Task<bool> ConfirmFlattenAsync()
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Root.XamlRoot,
+            Title = "PNG ではレイヤーが1枚にまとまります",
+            Content = "表示中のレイヤーを重ねた見た目で保存します。レイヤーを残したいときは .dotpix で保存してください。\n（アプリの中のレイヤーはそのまま残ります）",
+            PrimaryButtonText = "PNG で保存",
+            CloseButtonText = "キャンセル",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 
     private async Task ShowMessageAsync(string title, string message)
@@ -603,6 +707,11 @@ public sealed partial class MainWindow : Window
                 }
 
                 RestorePanelLayout();
+
+                if (_probe.FilesToOpen.Count > 0)
+                {
+                    ErrorLog.Run("起動時のファイルを開く", OpenStartupFilesAsync);
+                }
 
                 if (_probe.TestOpen == "new-document")
                 {

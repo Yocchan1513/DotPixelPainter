@@ -29,6 +29,9 @@ public sealed class StartupProbe
     /// </summary>
     public string? TestOpen { get; }
 
+    /// <summary>起動時に渡されたファイル（.dotpix / .png）。最初の描画のあとに開く。</summary>
+    public IReadOnlyList<string> FilesToOpen { get; private init; } = [];
+
     public static StartupProbe Current { get; } = FromCommandLine();
 
     public string? LogPath { get; }
@@ -41,6 +44,7 @@ public sealed class StartupProbe
         string? logPath = null;
         string? testOpen = null;
         bool exit = false;
+        var files = new List<string>();
         for (int i = 1; i < args.Length; i++)
         {
             if (args[i] == "--startup-log" && i + 1 < args.Length)
@@ -55,9 +59,13 @@ public sealed class StartupProbe
             {
                 testOpen = args[++i];
             }
+            else if (!args[i].StartsWith("--", StringComparison.Ordinal))
+            {
+                files.Add(args[i]); // それ以外は開くファイル（exe にファイルをドラッグしたときなど）
+            }
         }
 
-        return new StartupProbe(logPath, exit, testOpen);
+        return new StartupProbe(logPath, exit, testOpen) { FilesToOpen = files };
     }
 
     /// <summary>起動途中の区切りを記録する。計測していないときは何もしない。</summary>

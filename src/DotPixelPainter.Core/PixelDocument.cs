@@ -19,6 +19,17 @@ public sealed class PixelDocument
         _layers.Add(new Layer("レイヤー 1", width, height));
     }
 
+    /// <summary>ファイルから読んだレイヤーで作る（.dotpix の読み込み用）。読み込み直後は「保存済み」。</summary>
+    internal static PixelDocument FromLayers(string name, int width, int height, List<Layer> layers, int activeLayer)
+    {
+        var document = new PixelDocument(name, width, height);
+        document._layers.Clear();
+        document._layers.AddRange(layers);
+        document._nextLayerNumber = layers.Count + 1;
+        document.SetActive(activeLayer);
+        return document;
+    }
+
     public string Name { get; set; }
 
     public string? FilePath { get; set; }
