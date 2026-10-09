@@ -696,7 +696,7 @@ public sealed partial class MainWindow : Window
         return _bitmap;
     }
 
-    /// <summary>透明部分の下地（「…」メニューの「透明部分の表示」で選んだ色）。</summary>
+    /// <summary>透明部分の下地（「表示」メニューの「透明部分の表示」で選んだ色）。</summary>
     private CanvasImageBrush GetChecker(ICanvasResourceCreator resourceCreator)
     {
         if (_checker is not null && _checker.Device == resourceCreator.Device)
@@ -826,6 +826,7 @@ public sealed partial class MainWindow : Window
                 RestorePanelLayout();
 
                 _restoreSession = LoadSession().Restore;
+                BuildMenus();
                 if (_probe.FilesToOpen.Count > 0)
                 {
                     ErrorLog.Run("起動時のファイルを開く", OpenStartupFilesAsync);

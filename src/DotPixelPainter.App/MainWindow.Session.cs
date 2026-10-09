@@ -14,7 +14,7 @@ public sealed partial class MainWindow
         "DotPixelPainter",
         "session.txt");
 
-    /// <summary>前回のタブを開き直すか（「…」メニューで切り替える。初めはオン）。</summary>
+    /// <summary>前回のタブを開き直すか（「ヘルプ」メニューで切り替える。初めはオン）。</summary>
     private bool _restoreSession = true;
 
     private sealed record Session(bool Restore, int Active, List<string> Files);

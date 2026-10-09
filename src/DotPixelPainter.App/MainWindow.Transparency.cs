@@ -101,7 +101,7 @@ public sealed partial class MainWindow
         PreviewCanvas.Invalidate();
     }
 
-    /// <summary>「…」メニューに入れる、透明部分の表示の切り替え。</summary>
+    /// <summary>「表示」メニューに入れる、透明部分の表示の切り替え。</summary>
     private MenuFlyoutSubItem CreateTransparencyMenu()
     {
         var menu = new MenuFlyoutSubItem { Text = "透明部分の表示" };
