@@ -210,7 +210,7 @@ public sealed partial class MainWindow
             var barRect = new Windows.Foundation.Rect(barX, barY, barW, barH);
             if (row == 3)
             {
-                CanvasImageBrush checker = GetChecker(sender);
+                CanvasImageBrush checker = GetLightChecker(sender);
                 checker.Transform = Matrix3x2.CreateScale(0.5f) * Matrix3x2.CreateTranslation(barX, barY);
                 ds.FillRectangle(barRect, checker);
             }

@@ -6,6 +6,8 @@
     <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
     <RootNamespace>DotPixelPainter</RootNamespace>
     <AssemblyName>DotPixelPainter</AssemblyName>
+    <!-- アプリの版。ステータスバーの右下に出す -->
+    <Version>0.1.0</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- exe のアイコン。元の絵は リポジトリ直下の icon/ にある -->
     <ApplicationIcon>Assets\DotPixelPainter.ico</ApplicationIcon>

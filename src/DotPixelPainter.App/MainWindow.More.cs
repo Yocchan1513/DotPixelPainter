@@ -11,6 +11,7 @@ public sealed partial class MainWindow
     private MenuFlyout? _moreMenu;
     private MenuFlyoutItem? _associationItem;
     private ToggleMenuFlyoutItem? _restoreItem;
+    private MenuFlyoutSubItem? _transparencyMenu;
 
     private void More_Click(object sender, RoutedEventArgs e)
     {
@@ -24,6 +25,8 @@ public sealed partial class MainWindow
             _restoreItem = new ToggleMenuFlyoutItem { Text = "起動時に前回のタブを開き直す" };
             _restoreItem.Click += (_, _) => _restoreSession = _restoreItem.IsChecked;
             _moreMenu.Items.Add(_restoreItem);
+            _transparencyMenu = CreateTransparencyMenu();
+            _moreMenu.Items.Add(_transparencyMenu);
             _moreMenu.Items.Add(new MenuFlyoutSeparator());
 
             var log = new MenuFlyoutItem { Text = "エラーの記録があるフォルダを開く" };
@@ -37,6 +40,7 @@ public sealed partial class MainWindow
         }
 
         _restoreItem!.IsChecked = _restoreSession;
+        UpdateTransparencyMenu(_transparencyMenu!);
         _associationItem!.Text = FileAssociation.IsRegistered()
             ? ".dotpix の関連付けを解除する"
             : ".dotpix をダブルクリックでこのアプリで開くようにする";

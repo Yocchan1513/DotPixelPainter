@@ -371,5 +371,12 @@
             Padding="12,4"
             Style="{ThemeResource CaptionTextBlockStyle}"
             Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        <TextBlock
+            x:Name="VersionText"
+            Grid.Row="3"
+            HorizontalAlignment="Right"
+            Padding="12,4"
+            Style="{ThemeResource CaptionTextBlockStyle}"
+            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
     </Grid>
 </Window>
