@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Numerics;
 using DotPixelPainter.Core;
 using Microsoft.Graphics.Canvas;
@@ -20,6 +21,12 @@ namespace DotPixelPainter;
 
 public sealed partial class MainWindow : Window
 {
+    /// <summary>「v0.1.0」の形の版。csproj の Version から取る（ビルド時に付く「+コミット番号」は外す）。</summary>
+    private static string AppVersion =>
+        "v" + (typeof(MainWindow).Assembly
+            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            .Split('+')[0] ?? "?");
+
     private static readonly Color FrameColor = Color.FromArgb(255, 96, 96, 96);
 
     private readonly StartupProbe _probe;
@@ -59,6 +66,7 @@ public sealed partial class MainWindow : Window
         ApplyTitleBarTheme(Application.Current.RequestedTheme == ApplicationTheme.Dark);
         Root.ActualThemeChanged += (s, _) => ApplyTitleBarTheme(s.ActualTheme == ElementTheme.Dark);
 
+        VersionText.Text = AppVersion;
         InitializePalette();
         SetBackColor(_backColor);
         _probe.Mark("palette");
