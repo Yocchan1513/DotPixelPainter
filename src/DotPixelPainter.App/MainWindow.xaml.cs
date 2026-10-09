@@ -20,7 +20,6 @@ namespace DotPixelPainter;
 
 public sealed partial class MainWindow : Window
 {
-    private static readonly Color GridColor = Color.FromArgb(110, 64, 64, 64);
     private static readonly Color FrameColor = Color.FromArgb(255, 96, 96, 96);
 
     private readonly StartupProbe _probe;
@@ -29,6 +28,7 @@ public sealed partial class MainWindow : Window
     private CanvasBitmap? _bitmap;
     private DocumentTab? _bitmapOwner;
     private CanvasImageBrush? _checker;
+    private CanvasImageBrush? _lightChecker;
     private byte[] _pixelBuffer = [];
     private int _untitledCount;
     private bool _firstFrameReported;
@@ -660,6 +660,7 @@ public sealed partial class MainWindow : Window
         return _bitmap;
     }
 
+    /// <summary>透明部分の下地（「…」メニューの「透明部分の表示」で選んだ色）。</summary>
     private CanvasImageBrush GetChecker(ICanvasResourceCreator resourceCreator)
     {
         if (_checker is not null && _checker.Device == resourceCreator.Device)
@@ -667,22 +668,40 @@ public sealed partial class MainWindow : Window
             return _checker;
         }
 
+        EnsureTransparencyLoaded();
+        _checker?.Dispose();
+        _checker = CreateChecker(resourceCreator, _transparentA, _transparentB);
+        return _checker;
+    }
+
+    /// <summary>設定によらない明るい市松模様。不透明度のバーなど、色そのものを見せる場所に使う。</summary>
+    private CanvasImageBrush GetLightChecker(ICanvasResourceCreator resourceCreator)
+    {
+        if (_lightChecker is null || _lightChecker.Device != resourceCreator.Device)
+        {
+            _lightChecker?.Dispose();
+            _lightChecker = CreateChecker(resourceCreator, 0xFFFFFFFF, 0xFFE8E8E8);
+        }
+
+        return _lightChecker;
+    }
+
+    private static CanvasImageBrush CreateChecker(ICanvasResourceCreator resourceCreator, uint a, uint b)
+    {
         var tile = new CanvasRenderTarget(resourceCreator, 16, 16, 96f);
         using (CanvasDrawingSession ds = tile.CreateDrawingSession())
         {
-            ds.Clear(Color.FromArgb(255, 255, 255, 255));
-            ds.FillRectangle(8, 0, 8, 8, Color.FromArgb(255, 232, 232, 232));
-            ds.FillRectangle(0, 8, 8, 8, Color.FromArgb(255, 232, 232, 232));
+            ds.Clear(ToColor(a));
+            ds.FillRectangle(8, 0, 8, 8, ToColor(b));
+            ds.FillRectangle(0, 8, 8, 8, ToColor(b));
         }
 
-        _checker?.Dispose();
-        _checker = new CanvasImageBrush(resourceCreator, tile)
+        return new CanvasImageBrush(resourceCreator, tile)
         {
             ExtendX = CanvasEdgeBehavior.Wrap,
             ExtendY = CanvasEdgeBehavior.Wrap,
             Interpolation = CanvasImageInterpolation.NearestNeighbor,
         };
-        return _checker;
     }
 
     /// <summary>画像左上の位置（物理ピクセル）。整数に揃えてドットがにじまないようにする。</summary>
@@ -748,7 +767,7 @@ public sealed partial class MainWindow : Window
 
         if (GridToggle.IsChecked == true && tab.Zoom >= 4)
         {
-            DrawPixelGrid(ds, rect, document, tab.Zoom / scale, 1 / scale, (float)sender.ActualWidth, (float)sender.ActualHeight);
+            DrawPixelGrid(ds, rect, document, GridColor, tab.Zoom / scale, 1 / scale, (float)sender.ActualWidth, (float)sender.ActualHeight);
         }
 
         ds.DrawRectangle(rect, FrameColor, 1 / scale);
@@ -801,7 +820,7 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>1pxグリッド線。画面に見えている範囲の線だけを、物理1ピクセル幅で描く。</summary>
-    private static void DrawPixelGrid(CanvasDrawingSession ds, Rect r, PixelDocument document, float cell, float stroke, float viewW, float viewH)
+    private static void DrawPixelGrid(CanvasDrawingSession ds, Rect r, PixelDocument document, Color gridColor, float cell, float stroke, float viewW, float viewH)
     {
         float left = (float)r.X;
         float top = (float)r.Y;
@@ -814,7 +833,7 @@ public sealed partial class MainWindow : Window
         for (int x = x0; x <= x1; x++)
         {
             float px = left + x * cell + half;
-            ds.DrawLine(px, Math.Max(top, 0), px, Math.Min(bottom, viewH), GridColor, stroke);
+            ds.DrawLine(px, Math.Max(top, 0), px, Math.Min(bottom, viewH), gridColor, stroke);
         }
 
         int y0 = Math.Max(1, (int)MathF.Ceiling(-top / cell));
@@ -822,7 +841,7 @@ public sealed partial class MainWindow : Window
         for (int y = y0; y <= y1; y++)
         {
             float py = top + y * cell + half;
-            ds.DrawLine(Math.Max(left, 0), py, Math.Min(right, viewW), py, GridColor, stroke);
+            ds.DrawLine(Math.Max(left, 0), py, Math.Min(right, viewW), py, gridColor, stroke);
         }
     }
 
