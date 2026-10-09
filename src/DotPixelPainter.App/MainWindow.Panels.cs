@@ -66,14 +66,16 @@ public sealed partial class MainWindow
         panel.Slot.Child = null;
         panel.Slot.Visibility = Visibility.Collapsed;
 
+        // 中身が増えて（レイヤーの追加など）ウィンドウからはみ出したらスクロールできるようにする
         var host = new Grid { Padding = new Thickness(12) };
         host.Children.Add(panel.Section);
-        AttachShortcuts(host);
+        var scroller = new ScrollViewer { Content = host, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        AttachShortcuts(scroller);
 
         var window = new Window
         {
             Title = $"{panel.Title} - DotPixelPainter",
-            Content = host,
+            Content = scroller,
             SystemBackdrop = new MicaBackdrop(),
         };
 
