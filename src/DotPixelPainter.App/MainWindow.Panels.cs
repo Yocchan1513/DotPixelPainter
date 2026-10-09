@@ -94,7 +94,13 @@ public sealed partial class MainWindow
             int h = (int)((heightDip + 32) * scale) + 8;
             PointInt32 mainPos = AppWindow.Position;
             SizeInt32 mainSize = AppWindow.Size;
-            appWindow.MoveAndResize(new RectInt32(mainPos.X + mainSize.Width - w - (int)(260 * scale), mainPos.Y + (int)(120 * scale), w, h));
+            // すでに浮いているパネルと重ならないよう、1枚ごとに左下へずらす
+            int cascade = (int)(36 * scale) * _panels.Values.Count(p => p.Floating is not null);
+            appWindow.MoveAndResize(new RectInt32(
+                mainPos.X + mainSize.Width - w - (int)(260 * scale) - cascade,
+                mainPos.Y + (int)(120 * scale) + cascade,
+                w,
+                h));
         }
 
         nint hwnd = WindowNative.GetWindowHandle(window);
