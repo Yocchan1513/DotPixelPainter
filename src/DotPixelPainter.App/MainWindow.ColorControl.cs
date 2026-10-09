@@ -52,6 +52,7 @@ public sealed partial class MainWindow
 
         UpdateSwatchSelection();
         ColorBarsCanvas.Invalidate();
+        ShadeCanvas.Invalidate(); // 色の段階で、今の描画色に枠を付ける
 
         if (_colorPicker is not null && !_syncingPicker)
         {
