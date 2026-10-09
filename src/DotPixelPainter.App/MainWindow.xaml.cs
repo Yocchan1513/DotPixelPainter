@@ -373,6 +373,7 @@ public sealed partial class MainWindow : Window
         InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
         picker.FileTypeFilter.Add(DotPixFile.Extension);
         picker.FileTypeFilter.Add(".png");
+        picker.FileTypeFilter.Add(PsdReader.Extension);
         StorageFile? file = await picker.PickSingleFileAsync();
         if (file is null)
         {
@@ -381,11 +382,22 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            AddTab(await LoadDocumentAsync(file));
+            await OpenDocumentAsync(file);
         }
         catch (Exception ex)
         {
             await ShowMessageAsync("開けませんでした", ex.Message);
+        }
+    }
+
+    /// <summary>ファイルを開いてタブに追加する。PSD で扱いを変えた部分があれば、開いたあとに知らせる。</summary>
+    private async Task OpenDocumentAsync(StorageFile file)
+    {
+        (PixelDocument document, IReadOnlyList<string> warnings) = await LoadDocumentAsync(file);
+        AddTab(document);
+        if (warnings.Count > 0)
+        {
+            await ShowMessageAsync("読み込みについて", string.Join("\n\n", warnings));
         }
     }
 
@@ -402,7 +414,7 @@ public sealed partial class MainWindow : Window
         {
             try
             {
-                AddTab(await LoadDocumentAsync(await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path))));
+                await OpenDocumentAsync(await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)));
                 opened = true;
             }
             catch (Exception ex)
@@ -421,21 +433,31 @@ public sealed partial class MainWindow : Window
     private static bool IsDotPix(string path) =>
         string.Equals(Path.GetExtension(path), DotPixFile.Extension, StringComparison.OrdinalIgnoreCase);
 
-    private static async Task<PixelDocument> LoadDocumentAsync(StorageFile file)
+    private static async Task<(PixelDocument Document, IReadOnlyList<string> Warnings)> LoadDocumentAsync(StorageFile file)
     {
-        if (!IsDotPix(file.Path))
+        string extension = Path.GetExtension(file.Path);
+
+        // インストール不要のアプリなので、ファイルは普通にパスで読める（重い処理は裏で）
+        if (string.Equals(extension, PsdReader.Extension, StringComparison.OrdinalIgnoreCase))
         {
-            return await PngFile.LoadAsync(file);
+            PsdImportResult result = await Task.Run(() => PsdReader.Read(File.ReadAllBytes(file.Path), file.Name));
+            // PSD には書き出せないので、保存先は保存するときに選んでもらう（FilePath は空のまま）
+            result.Document.Name = Path.ChangeExtension(file.Name, DotPixFile.Extension);
+            return (result.Document, result.Warnings);
         }
 
-        // インストール不要のアプリなので、ファイルは普通にパスで読める
-        PixelDocument document = await Task.Run(() =>
+        if (IsDotPix(file.Path))
         {
-            using FileStream stream = File.OpenRead(file.Path);
-            return DotPixFile.Read(stream, file.Name);
-        });
-        document.FilePath = file.Path;
-        return document;
+            PixelDocument document = await Task.Run(() =>
+            {
+                using FileStream stream = File.OpenRead(file.Path);
+                return DotPixFile.Read(stream, file.Name);
+            });
+            document.FilePath = file.Path;
+            return (document, []);
+        }
+
+        return (await PngFile.LoadAsync(file), []);
     }
 
     private async Task SaveCurrentAsync()
