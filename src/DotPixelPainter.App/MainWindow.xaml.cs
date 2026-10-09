@@ -144,6 +144,22 @@ public sealed partial class MainWindow : Window
         Tabs.SelectedItem = item;
     }
 
+    /// <summary>このファイルを開いているタブ。保存先が同じか、保存前の PSD などの読み込み元が同じものを探す。</summary>
+    private TabViewItem? FindOpenTab(string path)
+    {
+        string full = Path.GetFullPath(path);
+        foreach (var (item, tab) in _tabs)
+        {
+            string? opened = tab.Document.FilePath ?? tab.ImportedFrom;
+            if (opened is not null && string.Equals(Path.GetFullPath(opened), full, StringComparison.OrdinalIgnoreCase))
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
     private void RefreshHeader(DocumentTab tab)
     {
         foreach (var (item, t) in _tabs)
@@ -422,8 +438,20 @@ public sealed partial class MainWindow : Window
     /// <summary>ファイルを開いてタブに追加する。PSD で扱いを変えた部分があれば、開いたあとに知らせる。</summary>
     private async Task OpenDocumentAsync(StorageFile file)
     {
+        // すでに開いているファイルなら、読み直さずにそのタブへ切り替える（描きかけの内容を残すため）
+        if (FindOpenTab(file.Path) is { } open)
+        {
+            Tabs.SelectedItem = open;
+            return;
+        }
+
         (PixelDocument document, IReadOnlyList<string> warnings) = await LoadDocumentAsync(file);
         AddTab(document);
+        if (document.FilePath is null)
+        {
+            _tabs[(TabViewItem)Tabs.SelectedItem].ImportedFrom = file.Path;
+        }
+
         if (warnings.Count > 0)
         {
             await ShowMessageAsync("読み込みについて", string.Join("\n\n", warnings));
@@ -668,7 +696,7 @@ public sealed partial class MainWindow : Window
         return _bitmap;
     }
 
-    /// <summary>透明部分の下地（「…」メニューの「透明部分の表示」で選んだ色）。</summary>
+    /// <summary>透明部分の下地（「表示」メニューの「透明部分の表示」で選んだ色）。</summary>
     private CanvasImageBrush GetChecker(ICanvasResourceCreator resourceCreator)
     {
         if (_checker is not null && _checker.Device == resourceCreator.Device)
@@ -798,6 +826,7 @@ public sealed partial class MainWindow : Window
                 RestorePanelLayout();
 
                 _restoreSession = LoadSession().Restore;
+                BuildMenus();
                 if (_probe.FilesToOpen.Count > 0)
                 {
                     ErrorLog.Run("起動時のファイルを開く", OpenStartupFilesAsync);
@@ -816,6 +845,10 @@ public sealed partial class MainWindow : Window
                 if (_probe.TestOpen == "new-document")
                 {
                     ErrorLog.Run("新規作成（テスト）", NewDocumentWithDialogAsync);
+                }
+                else if (_probe.TestOpen == "about")
+                {
+                    ErrorLog.Run("バージョン情報（テスト）", ShowAboutAsync);
                 }
                 else if (_probe.TestOpen?.StartsWith("detach:", StringComparison.Ordinal) == true
                     && _panels.TryGetValue(_probe.TestOpen["detach:".Length..], out DockPanel? panel)
@@ -885,13 +918,22 @@ public sealed partial class MainWindow : Window
         CanvasImageBrush checker = GetChecker(sender);
         float scale = sender.Dpi / 96f;
         float availW = (float)sender.ActualWidth;
+        float availH = (float)sender.ActualHeight;
         float y = 0;
 
         foreach (int times in (ReadOnlySpan<int>)[1, 2])
         {
             float w = document.Width * times / scale;
             float h = document.Height * times / scale;
-            if (w > availW)
+            bool tooBig = times == 1 && (w > availW || h > availH);
+            if (tooBig)
+            {
+                // 等倍でも入りきらない大きな絵は、1枚だけを枠いっぱいに縮めて見せる
+                float fit = Math.Min(availW / w, availH / h);
+                w *= fit;
+                h *= fit;
+            }
+            else if (w > availW)
             {
                 h *= availW / w;
                 w = availW;
@@ -915,6 +957,11 @@ public sealed partial class MainWindow : Window
 
             ds.DrawImage(bitmap, rect, new Rect(0, 0, document.Width, document.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
             ds.Transform = Matrix3x2.Identity;
+            if (tooBig)
+            {
+                break;
+            }
+
             y = MathF.Ceiling((y + h) * scale + 16) / scale;
         }
     }

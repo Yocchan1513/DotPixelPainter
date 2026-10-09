@@ -78,7 +78,7 @@ public sealed partial class MainWindow
         SlimToggle.IsChecked = tab?.Document.SlimArms == true;
         PreviewTitle.Text = skin ? "3D プレビュー" : "プレビュー";
         ToolTipService.SetToolTip(PreviewCanvas, skin ? "ドラッグで回転、ダブルクリックで元の向き" : "等倍と2倍（タイル表示では 3×3 に並べる）");
-        PreviewCanvas.Height = skin ? SkinPreviewHeight : TileToggle.IsChecked == true ? TilePreviewHeight : NormalPreviewHeight;
+        ApplyPreviewHeight();
         _skinHover = null;
         Canvas.Invalidate();
         PreviewCanvas.Invalidate();

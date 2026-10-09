@@ -13,6 +13,12 @@ public sealed class DocumentTab
     public PixelDocument Document { get; }
 
     /// <summary>
+    /// 読み込んだ元のファイル（PSD のように、保存先にならないファイルから作ったときだけ）。
+    /// 同じファイルをもう一度開こうとしたときに、このタブへ切り替えるために使う。
+    /// </summary>
+    public string? ImportedFrom { get; set; }
+
+    /// <summary>
     /// 1ピクセルを何物理ピクセルで表示するか。
     /// 0 は「まだ決めていない」で、最初に描くときに画面に収まる倍率を選ぶ。
     /// </summary>

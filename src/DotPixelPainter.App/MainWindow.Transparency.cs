@@ -10,11 +10,6 @@ namespace DotPixelPainter;
 /// </summary>
 public sealed partial class MainWindow
 {
-    private static string ViewSettingsPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "view.txt");
-
     private static readonly (string Text, uint A, uint B)[] TransparencyPresets =
     [
         ("市松模様（明るい）", 0xFFFFFFFF, 0xFFE8E8E8),
@@ -52,32 +47,13 @@ public sealed partial class MainWindow
         }
 
         _transparencyLoaded = true;
-        try
+        string[] colors = (ViewSettings.Get("transparent") ?? "").Split(',');
+        if (colors.Length == 2
+            && uint.TryParse(colors[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint a)
+            && uint.TryParse(colors[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint b))
         {
-            if (!File.Exists(ViewSettingsPath))
-            {
-                return;
-            }
-
-            foreach (string line in File.ReadAllLines(ViewSettingsPath))
-            {
-                string[] kv = line.Split('=', 2);
-                if (kv.Length == 2 && kv[0] == "transparent")
-                {
-                    string[] colors = kv[1].Split(',');
-                    if (colors.Length == 2
-                        && uint.TryParse(colors[0], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint a)
-                        && uint.TryParse(colors[1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint b))
-                    {
-                        _transparentA = a | 0xFF000000;
-                        _transparentB = b | 0xFF000000;
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorLog.Write("透明部分の表示の読み込み", ex);
+            _transparentA = a | 0xFF000000;
+            _transparentB = b | 0xFF000000;
         }
     }
 
@@ -87,21 +63,13 @@ public sealed partial class MainWindow
         _transparentB = b | 0xFF000000;
         _checker?.Dispose();
         _checker = null; // 次の描画で作り直す
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(ViewSettingsPath)!);
-            File.WriteAllText(ViewSettingsPath, string.Create(CultureInfo.InvariantCulture, $"transparent={_transparentA:X8},{_transparentB:X8}\n"));
-        }
-        catch (Exception ex)
-        {
-            ErrorLog.Write("透明部分の表示の保存", ex);
-        }
+        ViewSettings.Set("transparent", string.Create(CultureInfo.InvariantCulture, $"{_transparentA:X8},{_transparentB:X8}"));
 
         Canvas.Invalidate();
         PreviewCanvas.Invalidate();
     }
 
-    /// <summary>「…」メニューに入れる、透明部分の表示の切り替え。</summary>
+    /// <summary>「表示」メニューに入れる、透明部分の表示の切り替え。</summary>
     private MenuFlyoutSubItem CreateTransparencyMenu()
     {
         var menu = new MenuFlyoutSubItem { Text = "透明部分の表示" };
