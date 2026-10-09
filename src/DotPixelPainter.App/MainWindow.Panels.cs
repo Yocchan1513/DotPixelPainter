@@ -30,6 +30,7 @@ public sealed partial class MainWindow
     {
         AddPanel("preview", "プレビュー", PreviewSlot, PreviewSection, PreviewDetachButton);
         AddPanel("color", "カラー", ColorSlot, ColorSection, ColorDetachButton);
+        AddPanel("layers", "レイヤー", LayersSlot, LayersSection, LayersDetachButton);
         AddPanel("palette", "パレット", PaletteSlot, PaletteSection, PaletteDetachButton);
         Closed += (_, _) => CloseFloatingPanels();
     }

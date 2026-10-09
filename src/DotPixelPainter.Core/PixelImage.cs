@@ -51,6 +51,10 @@ public sealed class PixelImage
 
     public void Fill(uint argb) => Array.Fill(_pixels, argb);
 
+    internal uint[] CopyPixels() => (uint[])_pixels.Clone();
+
+    internal void RestorePixels(uint[] pixels) => pixels.CopyTo(_pixels, 0);
+
     public PixelImage Clone()
     {
         var copy = new PixelImage(Width, Height);

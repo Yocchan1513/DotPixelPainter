@@ -24,7 +24,7 @@ public class DocumentTests
         doc.ActiveLayer.Image.SetPixel(0, 0, 0xFF0000FF);
         doc.AddLayer("上");
         doc.ActiveLayer.Image.SetPixel(0, 0, 0xFFFF0000);
-        doc.ActiveLayer.Visible = false;
+        doc.SetLayerVisible(doc.ActiveLayerIndex, false);
 
         Assert.Equal(0xFF0000FFu, doc.Composite().GetPixel(0, 0));
     }
@@ -36,7 +36,7 @@ public class DocumentTests
         doc.ActiveLayer.Image.SetPixel(0, 0, 0xFF000000);
         doc.AddLayer("上");
         doc.ActiveLayer.Image.SetPixel(0, 0, 0xFFFFFFFF);
-        doc.ActiveLayer.Opacity = 0.5;
+        doc.SetLayerOpacity(doc.ActiveLayerIndex, 0.5);
 
         uint c = doc.Composite().GetPixel(0, 0);
 

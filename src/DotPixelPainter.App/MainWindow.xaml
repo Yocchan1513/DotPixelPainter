@@ -201,6 +201,52 @@
                     </StackPanel>
                     </Border>
 
+                    <!-- レイヤー（上にあるレイヤーほど一覧の上に並ぶ） -->
+                    <Border x:Name="LayersSlot">
+                    <StackPanel x:Name="LayersSection" Spacing="8">
+                        <Grid>
+                            <TextBlock Text="レイヤー" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <Button x:Name="LayersDetachButton" Tag="layers" HorizontalAlignment="Right" Padding="6,4" Click="PanelDetach_Click">
+                                <FontIcon Glyph="&#xE8A7;" FontSize="12" />
+                            </Button>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="3">
+                            <Button Width="30" Height="30" Padding="0" Click="LayerAdd_Click" ToolTipService.ToolTip="新しいレイヤーを上に追加">
+                                <FontIcon Glyph="&#xE710;" FontSize="12" />
+                            </Button>
+                            <Button Width="30" Height="30" Padding="0" Click="LayerDuplicate_Click" ToolTipService.ToolTip="複製">
+                                <FontIcon Glyph="&#xE8C8;" FontSize="12" />
+                            </Button>
+                            <Button Width="30" Height="30" Padding="0" Click="LayerUp_Click" ToolTipService.ToolTip="ひとつ上へ">
+                                <FontIcon Glyph="&#xE70E;" FontSize="12" />
+                            </Button>
+                            <Button Width="30" Height="30" Padding="0" Click="LayerDown_Click" ToolTipService.ToolTip="ひとつ下へ">
+                                <FontIcon Glyph="&#xE70D;" FontSize="12" />
+                            </Button>
+                            <Button Width="30" Height="30" Padding="0" Click="LayerMerge_Click" Content="結" FontSize="12" ToolTipService.ToolTip="下のレイヤーと結合" />
+                            <Button Width="30" Height="30" Padding="0" Click="LayerDelete_Click" ToolTipService.ToolTip="削除">
+                                <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                            </Button>
+                        </StackPanel>
+                        <StackPanel x:Name="LayerList" Spacing="2" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="LayerOpacityText" VerticalAlignment="Center" FontSize="12" Text="不透明度 100%" />
+                            <Slider
+                                x:Name="LayerOpacitySlider"
+                                Grid.Column="1"
+                                Minimum="0"
+                                Maximum="100"
+                                StepFrequency="1"
+                                Value="100"
+                                ValueChanged="LayerOpacitySlider_ValueChanged" />
+                        </Grid>
+                    </StackPanel>
+                    </Border>
+
                     <!-- パレット -->
                     <Border x:Name="PaletteSlot">
                     <StackPanel x:Name="PaletteSection" Spacing="8">

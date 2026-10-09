@@ -116,15 +116,18 @@ public class UndoHistoryTests
     }
 
     [Fact]
-    public void Undo_StillTargetsRightLayer_AfterLayerIsInsertedBelow()
+    public void Undo_TargetsRightLayer_AfterLayersAreReordered()
     {
         var doc = new PixelDocument("t", 2, 2);
-        Draw(doc, 0xFFFF0000, (0, 0));
-        Layer drawn = doc.ActiveLayer;
-        doc.AddLayer("上");
+        Layer a = doc.ActiveLayer;
+        Layer b = doc.AddLayer("B");
+        doc.MoveLayer(1, 0);            // B を A の下へ（A の番号が 0 → 1 に変わる）
+        doc.SelectLayer(doc.Layers.ToList().IndexOf(a));
+        Draw(doc, 0xFFFF0000, (0, 0));  // A に描く
 
         doc.History.Undo();
 
-        Assert.Equal(0u, drawn.Image.GetPixel(0, 0));
+        Assert.Equal(0u, a.Image.GetPixel(0, 0));
+        Assert.Equal(0u, b.Image.GetPixel(0, 0));
     }
 }

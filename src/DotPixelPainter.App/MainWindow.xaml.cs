@@ -209,6 +209,7 @@ public sealed partial class MainWindow : Window
         RedrawAll();
         UpdateUndoButtons();
         UpdateWindowTitle();
+        RefreshLayerList();
     }
 
     private async void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
@@ -327,6 +328,8 @@ public sealed partial class MainWindow : Window
         tab.ImageChanged = true;
         RefreshHeader(tab);
         UpdateUndoButtons();
+        RefreshLayerList(); // 元に戻すでレイヤーが増減・入れ替わることがある
+        UpdateStatus(null);
         Canvas.Invalidate();
         PreviewCanvas.Invalidate();
     }

@@ -1,9 +1,21 @@
 namespace DotPixelPainter.Core;
 
+/// <summary>元に戻す／やり直しの履歴の1件。ひと筆、レイヤーの追加、不透明度の変更など。</summary>
+public abstract class HistoryEntry
+{
+    /// <summary>おおよそのメモリ使用量（バイト）。</summary>
+    public abstract long ByteSize { get; }
+
+    internal abstract void Apply(bool undo);
+
+    /// <summary>直後の操作 next を自分にまとめられるなら、まとめて true を返す（スライダーを動かし続けたときなど）。</summary>
+    internal virtual bool TryMerge(HistoryEntry next) => false;
+}
+
 /// <summary>
 /// 1回の操作（ペンのひと筆など）で変わったピクセルの記録。変わった画素だけを持つので小さい。
 /// </summary>
-public sealed class PixelEdit
+public sealed class PixelEdit : HistoryEntry
 {
     private readonly int[] _indices;
     private readonly uint[] _before;
@@ -22,10 +34,9 @@ public sealed class PixelEdit
 
     public int PixelCount => _indices.Length;
 
-    /// <summary>おおよそのメモリ使用量（バイト）。</summary>
-    public long ByteSize => _indices.Length * 12L + 64;
+    public override long ByteSize => _indices.Length * 12L + 64;
 
-    internal void Apply(bool undo)
+    internal override void Apply(bool undo)
     {
         PixelImage image = Layer.Image;
         uint[] values = undo ? _before : _after;
@@ -45,7 +56,7 @@ public sealed class UndoHistory
 {
     public const long DefaultMemoryLimit = 64L * 1024 * 1024;
 
-    private readonly List<PixelEdit> _edits = [];
+    private readonly List<HistoryEntry> _edits = [];
     private int _position;
     private int _savedPosition;
     private long _bytes;
@@ -70,7 +81,7 @@ public sealed class UndoHistory
 
     public void MarkSaved() => _savedPosition = _position;
 
-    internal void Push(PixelEdit edit)
+    internal void Push(HistoryEntry edit)
     {
         // やり直し待ちの操作は捨てる
         if (_position < _edits.Count)
@@ -85,6 +96,12 @@ public sealed class UndoHistory
             {
                 _savedPosition = -1; // 保存した状態にはもう戻れない
             }
+        }
+
+        // 直前の操作にまとめられるならまとめる（保存した直後の操作はまとめない）
+        if (_position > 0 && _position == _edits.Count && _savedPosition != _position && _edits[_position - 1].TryMerge(edit))
+        {
+            return;
         }
 
         _edits.Add(edit);
