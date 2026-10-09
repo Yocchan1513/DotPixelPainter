@@ -144,6 +144,22 @@ public sealed partial class MainWindow : Window
         Tabs.SelectedItem = item;
     }
 
+    /// <summary>このファイルを開いているタブ。保存先が同じか、保存前の PSD などの読み込み元が同じものを探す。</summary>
+    private TabViewItem? FindOpenTab(string path)
+    {
+        string full = Path.GetFullPath(path);
+        foreach (var (item, tab) in _tabs)
+        {
+            string? opened = tab.Document.FilePath ?? tab.ImportedFrom;
+            if (opened is not null && string.Equals(Path.GetFullPath(opened), full, StringComparison.OrdinalIgnoreCase))
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
     private void RefreshHeader(DocumentTab tab)
     {
         foreach (var (item, t) in _tabs)
@@ -422,8 +438,20 @@ public sealed partial class MainWindow : Window
     /// <summary>ファイルを開いてタブに追加する。PSD で扱いを変えた部分があれば、開いたあとに知らせる。</summary>
     private async Task OpenDocumentAsync(StorageFile file)
     {
+        // すでに開いているファイルなら、読み直さずにそのタブへ切り替える（描きかけの内容を残すため）
+        if (FindOpenTab(file.Path) is { } open)
+        {
+            Tabs.SelectedItem = open;
+            return;
+        }
+
         (PixelDocument document, IReadOnlyList<string> warnings) = await LoadDocumentAsync(file);
         AddTab(document);
+        if (document.FilePath is null)
+        {
+            _tabs[(TabViewItem)Tabs.SelectedItem].ImportedFrom = file.Path;
+        }
+
         if (warnings.Count > 0)
         {
             await ShowMessageAsync("読み込みについて", string.Join("\n\n", warnings));
