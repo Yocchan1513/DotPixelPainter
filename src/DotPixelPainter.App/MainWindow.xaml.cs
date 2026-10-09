@@ -53,6 +53,7 @@ public sealed partial class MainWindow : Window
         // タブはタイトルバーの下に並べる（タイトルバーに入れる設定は起動を 150ms ほど遅くするため使わない）
         AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 800));
         AppWindow.Closing += AppWindow_Closing;
+        SetWindowIcon(AppWindow);
 
         // 標準のタイトルバーの明暗を、アプリのテーマ（＝Windows の設定）に合わせる
         ApplyTitleBarTheme(Application.Current.RequestedTheme == ApplicationTheme.Dark);
@@ -138,6 +139,17 @@ public sealed partial class MainWindow : Window
         }
 
         UpdateWindowTitle();
+    }
+
+    private static readonly string IconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "DotPixelPainter.ico");
+
+    /// <summary>タイトルバーとタスクバーのアイコン。見つからなくても動きは続ける。</summary>
+    private static void SetWindowIcon(AppWindow window)
+    {
+        if (File.Exists(IconPath))
+        {
+            window.SetIcon(IconPath);
+        }
     }
 
     private void ApplyTitleBarTheme(bool dark) =>

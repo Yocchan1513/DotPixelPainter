@@ -80,6 +80,7 @@ public sealed partial class MainWindow
         };
 
         AppWindow appWindow = window.AppWindow;
+        SetWindowIcon(appWindow);
         if (appWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.IsMaximizable = false;

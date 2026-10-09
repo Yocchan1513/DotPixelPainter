@@ -7,6 +7,8 @@
     <RootNamespace>DotPixelPainter</RootNamespace>
     <AssemblyName>DotPixelPainter</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- exe のアイコン。元の絵は リポジトリ直下の icon/ にある -->
+    <ApplicationIcon>Assets\DotPixelPainter.ico</ApplicationIcon>
     <Platforms>x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
@@ -41,6 +43,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DotPixelPainter.Core\DotPixelPainter.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ウィンドウ（タイトルバー・タスクバー）のアイコン用に、出力先へコピーする -->
+    <Content Include="Assets\DotPixelPainter.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
