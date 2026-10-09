@@ -83,10 +83,23 @@ public sealed partial class MainWindow : Window
 
     // ---- タブ ----
 
+    /// <summary>前回「新規作成」で選んだサイズと背景で、新しいドキュメントを作る。</summary>
     private PixelDocument CreateUntitled()
     {
+        NewDocumentSettings s = NewDocumentSettings.Load();
+        return CreateUntitled(s.Width, s.Height, s.WhiteBackground);
+    }
+
+    private PixelDocument CreateUntitled(int width, int height, bool whiteBackground)
+    {
         _untitledCount++;
-        return new PixelDocument($"無題 {_untitledCount}", 64, 64);
+        var document = new PixelDocument($"無題 {_untitledCount}", width, height);
+        if (whiteBackground)
+        {
+            document.ActiveLayer.Image.Fill(0xFFFFFFFF);
+        }
+
+        return document;
     }
 
     private void AddTab(PixelDocument document)
@@ -215,14 +228,14 @@ public sealed partial class MainWindow : Window
         AddShortcut(VirtualKey.Z, VirtualKeyModifiers.Control, Undo);
         AddShortcut(VirtualKey.Y, VirtualKeyModifiers.Control, Redo);
         AddShortcut(VirtualKey.Z, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, Redo);
-        AddShortcut(VirtualKey.N, VirtualKeyModifiers.Control, () => AddTab(CreateUntitled()));
-        AddShortcut(VirtualKey.O, VirtualKeyModifiers.Control, () => _ = OpenAsync());
-        AddShortcut(VirtualKey.S, VirtualKeyModifiers.Control, () => _ = SaveCurrentAsync());
+        AddShortcut(VirtualKey.N, VirtualKeyModifiers.Control, () => ErrorLog.Run("新規作成", NewDocumentWithDialogAsync));
+        AddShortcut(VirtualKey.O, VirtualKeyModifiers.Control, () => ErrorLog.Run("開く", OpenAsync));
+        AddShortcut(VirtualKey.S, VirtualKeyModifiers.Control, () => ErrorLog.Run("保存", SaveCurrentAsync));
         AddShortcut(VirtualKey.W, VirtualKeyModifiers.Control, () =>
         {
             if (Tabs.SelectedItem is TabViewItem item)
             {
-                _ = CloseTabAsync(item);
+                ErrorLog.Run("タブを閉じる", () => CloseTabAsync(item));
             }
         });
         AddShortcut(VirtualKey.Tab, VirtualKeyModifiers.Control, () => SelectRelativeTab(1));
@@ -240,11 +253,11 @@ public sealed partial class MainWindow : Window
         Root.KeyboardAccelerators.Add(accelerator);
     }
 
-    private void New_Click(object sender, RoutedEventArgs e) => AddTab(CreateUntitled());
+    private void New_Click(object sender, RoutedEventArgs e) => ErrorLog.Run("新規作成", NewDocumentWithDialogAsync);
 
-    private async void Open_Click(object sender, RoutedEventArgs e) => await OpenAsync();
+    private void Open_Click(object sender, RoutedEventArgs e) => ErrorLog.Run("開く", OpenAsync);
 
-    private async void Save_Click(object sender, RoutedEventArgs e) => await SaveCurrentAsync();
+    private void Save_Click(object sender, RoutedEventArgs e) => ErrorLog.Run("保存", SaveCurrentAsync);
 
     private void ZoomIn_Click(object sender, RoutedEventArgs e) => ZoomAtCenter(1);
 
@@ -462,6 +475,12 @@ public sealed partial class MainWindow : Window
         float scale = canvas.Dpi / 96f;
         float viewW = (float)canvas.ActualWidth * scale;
         float viewH = (float)canvas.ActualHeight * scale;
+        if (tab.Zoom == 0 && viewW > 0 && viewH > 0)
+        {
+            // 新しく開いたタブは、画面に収まるいちばん大きい倍率で表示する
+            tab.Zoom = ZoomLevels.Fit(tab.Document.Width, tab.Document.Height, viewW, viewH);
+        }
+
         float imageW = tab.Document.Width * tab.Zoom;
         float imageH = tab.Document.Height * tab.Zoom;
         float ox = MathF.Floor((viewW - imageW) / 2 + tab.PanX);
@@ -482,7 +501,19 @@ public sealed partial class MainWindow : Window
         ds.Antialiasing = CanvasAntialiasing.Aliased;
 
         CanvasBitmap bitmap = GetBitmap(sender, tab);
+        bool zoomWasUnset = tab.Zoom == 0;
         (float scale, float ox, float oy) = Layout(sender, tab);
+        if (tab.Zoom == 0)
+        {
+            return; // まだ大きさが決まっていない
+        }
+
+        if (zoomWasUnset)
+        {
+            // 倍率が決まったので表示を更新する（描画中は文字を変えず、終わってから）
+            DispatcherQueue.TryEnqueue(() => UpdateStatus(null));
+        }
+
         var rect = new Rect(ox / scale, oy / scale, document.Width * tab.Zoom / scale, document.Height * tab.Zoom / scale);
 
         CanvasImageBrush checker = GetChecker(sender);
@@ -516,6 +547,12 @@ public sealed partial class MainWindow : Window
                 {
                     _forceClose = true;
                     Close();
+                    return;
+                }
+
+                if (_probe.TestOpen == "new-document")
+                {
+                    ErrorLog.Run("新規作成（テスト）", NewDocumentWithDialogAsync);
                 }
             });
         }
@@ -593,6 +630,11 @@ public sealed partial class MainWindow : Window
     private (int X, int Y) ToImage(DocumentTab tab, Point p)
     {
         (float scale, float ox, float oy) = Layout(Canvas, tab);
+        if (tab.Zoom == 0)
+        {
+            return (-1, -1); // まだ表示されていない
+        }
+
         int x = (int)MathF.Floor(((float)p.X * scale - ox) / tab.Zoom);
         int y = (int)MathF.Floor(((float)p.Y * scale - oy) / tab.Zoom);
         if (IsFlipped)
@@ -765,7 +807,7 @@ public sealed partial class MainWindow : Window
     /// <summary>指定位置（DIP）の下にあるピクセルが動かないように倍率を変える。</summary>
     private void ZoomAt(DocumentTab tab, int newZoom, Point anchor)
     {
-        if (newZoom == tab.Zoom)
+        if (newZoom == tab.Zoom || tab.Zoom == 0)
         {
             return;
         }

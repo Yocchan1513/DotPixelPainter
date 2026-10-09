@@ -15,11 +15,18 @@ public sealed class StartupProbe
     private readonly List<(string Name, long Ticks)> _marks = [];
     private bool _reported;
 
-    private StartupProbe(string? logPath, bool exitAfterStartup)
+    private StartupProbe(string? logPath, bool exitAfterStartup, string? testOpen)
     {
         LogPath = logPath;
         ExitAfterStartup = exitAfterStartup;
+        TestOpen = testOpen;
     }
+
+    /// <summary>
+    /// 開発用。`--test-open new-document` で起動すると、最初の描画のあとに新規作成ダイアログを開く。
+    /// マウスやキーボードを動かさずに、ダイアログの見た目を撮影して確かめるために使う。
+    /// </summary>
+    public string? TestOpen { get; }
 
     public static StartupProbe Current { get; } = FromCommandLine();
 
@@ -31,6 +38,7 @@ public sealed class StartupProbe
     {
         string[] args = Environment.GetCommandLineArgs();
         string? logPath = null;
+        string? testOpen = null;
         bool exit = false;
         for (int i = 1; i < args.Length; i++)
         {
@@ -42,9 +50,13 @@ public sealed class StartupProbe
             {
                 exit = true;
             }
+            else if (args[i] == "--test-open" && i + 1 < args.Length)
+            {
+                testOpen = args[++i];
+            }
         }
 
-        return new StartupProbe(logPath, exit);
+        return new StartupProbe(logPath, exit, testOpen);
     }
 
     /// <summary>起動途中の区切りを記録する。計測していないときは何もしない。</summary>

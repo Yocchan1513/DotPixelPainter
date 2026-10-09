@@ -61,6 +61,12 @@ dotnet publish src/DotPixelPainter.App -c Release -r win-x64 -o artifacts/publis
 - 2026-10-09 時点の実測（Ryzen 5 5500、2回目以降の中央値）: Native AOT 約0.43秒、ReadyToRun 約0.49秒。
 - 公開用出力にアプリの .pri を含めるため `EnableMsixTooling=true` が必要（外すと起動直後に落ちる）。
 
+### Native AOT の落とし穴（Debug では動くのに配布版だけ壊れる）
+
+- `Application.Current.Resources["CaptionTextBlockStyle"]` を `(Style)` に変換すると InvalidCastException になる。コードで作る部品の文字スタイルは FontSize などを直接指定する（Brush の取り出しは問題なし）。
+- 投げっぱなしの非同期処理（`_ = FooAsync()`）はエラーが消えて何も起きないように見える。必ず `ErrorLog.Run("どこ", FooAsync)` を通す。エラーは `%LOCALAPPDATA%\DotPixelPainter\error.log` に残る。
+- 画面を足したら、Debug だけでなく AOT の配布版でも開いて確かめる。ダイアログは `--test-open new-document` で起動すると、入力を送らずに開いて撮影できる。
+
 ## 見た目の確認
 
 UI の見た目や操作感は Claude Code だけでは確かめにくい。フェーズごとに利用者が実際に触って確認する。

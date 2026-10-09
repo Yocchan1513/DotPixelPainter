@@ -15,6 +15,9 @@ public partial class App : Application
 
         InitializeComponent();
         StartupProbe.Current.Mark("app-resources");
+
+        UnhandledException += (_, e) => ErrorLog.Write("UnhandledException", e.Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => ErrorLog.Write("UnobservedTaskException", e.Exception);
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
