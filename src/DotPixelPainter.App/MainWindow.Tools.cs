@@ -63,7 +63,7 @@ public sealed partial class MainWindow
     };
 
     private string ToolStatus() =>
-        _tool is Tool.Pencil or Tool.Eraser ? $"{ToolName(_tool)}・{ShapeName(_shape)}" : ToolName(_tool);
+        _tool is Tool.Pencil or Tool.Eraser ? $"{ToolName(_tool)}・{ShapeName(_shape)}・{_brush.Size}px" : ToolName(_tool);
 
     private void BuildToolPanel()
     {
@@ -189,6 +189,10 @@ public sealed partial class MainWindow
             case VirtualKey.Number4: SelectShape(ShapeKind.FilledRectangle); break;
             case VirtualKey.Number5: SelectShape(ShapeKind.Ellipse); break;
             case VirtualKey.Number6: SelectShape(ShapeKind.FilledEllipse); break;
+            case VirtualKey.X: SwapColors(); break;
+            case VirtualKey.D: ResetColors(); break;
+            case (VirtualKey)219: ChangeBrushSize(-1); break; // [
+            case (VirtualKey)221: ChangeBrushSize(1); break;  // ]
             default: return;
         }
 
@@ -269,7 +273,7 @@ public sealed partial class MainWindow
     {
         (int x0, int y0) = _shapeStart;
         (int x1, int y1) = _shapeEnd;
-        return _shape switch
+        List<PixelSpan> spans = _shape switch
         {
             ShapeKind.Line => ShapeRaster.Line(x0, y0, x1, y1),
             ShapeKind.Rectangle => ShapeRaster.Rectangle(x0, y0, x1, y1, filled: false),
@@ -278,6 +282,21 @@ public sealed partial class MainWindow
             ShapeKind.FilledEllipse => ShapeRaster.Ellipse(x0, y0, x1, y1, filled: true),
             _ => [],
         };
+
+        // 線（直線・四角・円の枠）はブラシの太さで描く。塗りの図形はそのまま
+        bool outline = _shape is ShapeKind.Line or ShapeKind.Rectangle or ShapeKind.Ellipse;
+        return outline && _brush.Size > 1 ? ShapeRaster.ToSpans(_brush.Stamp(SpanPixels(spans))) : spans;
+    }
+
+    private static IEnumerable<(int X, int Y)> SpanPixels(IEnumerable<PixelSpan> spans)
+    {
+        foreach (PixelSpan s in spans)
+        {
+            for (int x = s.X0; x <= s.X1; x++)
+            {
+                yield return (x, s.Y);
+            }
+        }
     }
 
     /// <summary>図形を確定して1回の操作として履歴に積む。</summary>

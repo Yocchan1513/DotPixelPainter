@@ -59,6 +59,7 @@ public sealed partial class MainWindow : Window
         Root.ActualThemeChanged += (s, _) => ApplyTitleBarTheme(s.ActualTheme == ElementTheme.Dark);
 
         InitializePalette();
+        SetBackColor(_backColor);
         _probe.Mark("palette");
         BuildToolPanel();
         _probe.Mark("tools");
@@ -781,7 +782,7 @@ public sealed partial class MainWindow : Window
         }
 
         bool changed = false;
-        foreach ((int x, int y) in points)
+        foreach ((int x, int y) in _brush.Stamp(points))
         {
             changed |= _stroke.Plot(x, y, _paintColor);
         }

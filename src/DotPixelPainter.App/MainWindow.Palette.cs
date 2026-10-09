@@ -144,22 +144,8 @@ public sealed partial class MainWindow
         }
     }
 
-    private void SetCurrentColor(uint argb)
-    {
-        _color = argb;
-        CurrentColorButton.Background = new SolidColorBrush(ToColor(argb));
-        CurrentColorText.Text = $"#{argb:X8}";
-        UpdateSwatchSelection();
-
-        if (_colorPicker is not null && !_syncingPicker)
-        {
-            _syncingPicker = true;
-            _colorPicker.Color = ToColor(argb);
-            _syncingPicker = false;
-        }
-    }
-
-    private void CurrentColor_Click(object sender, RoutedEventArgs e)
+    /// <summary>描画色の四角をクリックしたら、カラーピッカーを開く。</summary>
+    private void ForeColor_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
     {
         // カラーピッカーは重いので、初めて使うときに作る
         if (_colorPicker is null)
@@ -188,7 +174,7 @@ public sealed partial class MainWindow
         _syncingPicker = true;
         _colorPicker.Color = ToColor(_color);
         _syncingPicker = false;
-        _colorFlyout!.ShowAt(CurrentColorButton);
+        _colorFlyout!.ShowAt(ForeColorSwatch);
     }
 
     private async void AddColor_Click(object sender, RoutedEventArgs e)

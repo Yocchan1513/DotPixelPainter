@@ -96,19 +96,89 @@
                 Background="{ThemeResource LayerFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1,0,0,0">
-                <Grid RowSpacing="8">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                <!-- ウィンドウが低いときはスクロールできるようにする -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="8">
                     <TextBlock Text="プレビュー（等倍・2倍）" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <win2d:CanvasControl x:Name="PreviewCanvas" Grid.Row="1" Draw="PreviewCanvas_Draw" />
+                    <win2d:CanvasControl x:Name="PreviewCanvas" Height="140" Draw="PreviewCanvas_Draw" />
+
+                    <!-- 色: 描画色と背景色、色コード、RGB/HSV の切り替え -->
+                    <Grid Margin="0,4,0,0" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid Width="54" Height="54">
+                            <Border
+                                x:Name="BackColorSwatch"
+                                Width="34"
+                                Height="34"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Tapped="BackColor_Tapped"
+                                ToolTipService.ToolTip="背景色（クリックで描画色と入れ替え X / 白黒に戻す D）" />
+                            <Border
+                                x:Name="ForeColorSwatch"
+                                Width="34"
+                                Height="34"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                BorderBrush="{ThemeResource TextFillColorPrimaryBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Tapped="ForeColor_Tapped"
+                                ToolTipService.ToolTip="描画色（クリックでカラーピッカー）" />
+                        </Grid>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                            <TextBox
+                                x:Name="ColorHexBox"
+                                FontFamily="Consolas"
+                                MaxLength="9"
+                                KeyDown="ColorHexBox_KeyDown"
+                                LostFocus="ColorHexBox_LostFocus"
+                                ToolTipService.ToolTip="色コード（RRGGBB または AARRGGBB）。Enter で反映" />
+                            <ToggleButton
+                                x:Name="HsvToggle"
+                                Content="HSV"
+                                Padding="10,2"
+                                Click="ColorMode_Click"
+                                ToolTipService.ToolTip="スライダーを RGB と HSV で切り替え" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 色のスライダー（1枚の描画領域に4本まとめて描く） -->
+                    <win2d:CanvasControl
+                        x:Name="ColorBarsCanvas"
+                        Height="96"
+                        Draw="ColorBars_Draw"
+                        PointerPressed="ColorBars_PointerPressed"
+                        PointerMoved="ColorBars_PointerMoved"
+                        PointerReleased="ColorBars_PointerReleased"
+                        PointerCaptureLost="ColorBars_PointerCaptureLost"
+                        PointerWheelChanged="ColorBars_PointerWheelChanged" />
+
+                    <!-- ブラシ -->
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock x:Name="BrushSizeText" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" Text="ブラシ 1px" />
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
+                            <ToggleButton x:Name="SquareBrushToggle" Content="□" Padding="8,2" IsChecked="True" Click="BrushShape_Click" ToolTipService.ToolTip="四角いペン先" />
+                            <ToggleButton x:Name="RoundBrushToggle" Content="○" Padding="8,2" Click="BrushShape_Click" ToolTipService.ToolTip="丸いペン先" />
+                        </StackPanel>
+                    </Grid>
+                    <Slider
+                        x:Name="BrushSizeSlider"
+                        Minimum="1"
+                        Maximum="16"
+                        StepFrequency="1"
+                        Value="1"
+                        ValueChanged="BrushSizeSlider_ValueChanged"
+                        ToolTipService.ToolTip="ペン先の大きさ（[ と ] でも変えられる）" />
 
                     <!-- パレット -->
-                    <Grid Grid.Row="2">
+                    <Grid Margin="0,4,0,0">
                         <TextBlock Text="パレット" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
                             <Button Content="＋" Padding="8,2" Click="AddColor_Click" ToolTipService.ToolTip="描画色をパレットに追加" />
@@ -126,30 +196,16 @@
                     </Grid>
                     <VariableSizedWrapGrid
                         x:Name="PaletteGrid"
-                        Grid.Row="3"
                         Orientation="Horizontal"
                         ItemWidth="27"
                         ItemHeight="27"
                         MaximumRowsOrColumns="7" />
-
-                    <!-- 描画色 -->
-                    <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10">
-                        <Button
-                            x:Name="CurrentColorButton"
-                            Width="44"
-                            Height="44"
-                            Padding="0"
-                            Click="CurrentColor_Click"
-                            ToolTipService.ToolTip="描画色を変更" />
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock x:Name="CurrentColorText" Style="{ThemeResource BodyTextBlockStyle}" />
-                            <TextBlock
-                                Text="Alt+クリックでスポイト"
-                                Style="{ThemeResource CaptionTextBlockStyle}"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                    </StackPanel>
-                </Grid>
+                    <TextBlock
+                        Text="Alt+クリックでスポイト"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                </ScrollViewer>
             </Border>
         </Grid>
 
