@@ -33,7 +33,7 @@ public readonly record struct PixelRect(int X, int Y, int Width, int Height)
 /// </summary>
 public sealed class FloatingSelection
 {
-    private readonly uint[] _pixels;
+    private uint[] _pixels;
 
     private FloatingSelection(PixelRect bounds, uint[] pixels)
     {
@@ -45,6 +45,66 @@ public sealed class FloatingSelection
     public PixelRect Bounds { get; private set; }
 
     public ReadOnlySpan<uint> Pixels => _pixels;
+
+    /// <summary>貼り付け用。image の中身を (x, y) に浮かせる（元の画像は変えない）。</summary>
+    public static FloatingSelection FromImage(PixelImage image, int x, int y) =>
+        new(new PixelRect(x, y, image.Width, image.Height), image.Pixels.ToArray());
+
+    /// <summary>コピー用に、中身を1枚の画像として取り出す。</summary>
+    public PixelImage ToImage()
+    {
+        var image = new PixelImage(Bounds.Width, Bounds.Height);
+        for (int i = 0; i < _pixels.Length; i++)
+        {
+            image.SetPixel(i % Bounds.Width, i / Bounds.Width, _pixels[i]);
+        }
+
+        return image;
+    }
+
+    public void FlipHorizontal()
+    {
+        int w = Bounds.Width;
+        for (int y = 0; y < Bounds.Height; y++)
+        {
+            Array.Reverse(_pixels, y * w, w);
+        }
+    }
+
+    public void FlipVertical()
+    {
+        int w = Bounds.Width;
+        int h = Bounds.Height;
+        for (int y = 0; y < h / 2; y++)
+        {
+            Span<uint> a = _pixels.AsSpan(y * w, w);
+            Span<uint> b = _pixels.AsSpan((h - 1 - y) * w, w);
+            for (int x = 0; x < w; x++)
+            {
+                (a[x], b[x]) = (b[x], a[x]);
+            }
+        }
+    }
+
+    /// <summary>90度回す。幅と高さが入れ替わるので、中心がなるべく動かないように位置を合わせる。</summary>
+    public void Rotate90(bool clockwise)
+    {
+        int w = Bounds.Width;
+        int h = Bounds.Height;
+        var rotated = new uint[_pixels.Length];
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                // 回したあとの幅は h、高さは w
+                (int nx, int ny) = clockwise ? (h - 1 - y, x) : (y, w - 1 - x);
+                rotated[ny * h + nx] = _pixels[y * w + x];
+            }
+        }
+
+        _pixels = rotated;
+        Bounds = new PixelRect(Bounds.X + (w - h) / 2, Bounds.Y + (h - w) / 2, h, w);
+    }
 
     /// <summary>
     /// rect の中身を image から持ち上げ、元の場所を stroke で透明にする。

@@ -11,20 +11,40 @@ public static class PngFile
     public static async Task<PixelDocument> LoadAsync(StorageFile file)
     {
         using IRandomAccessStream stream = await file.OpenReadAsync();
+        PixelImage image = await DecodeAsync(stream);
+        var document = new PixelDocument(file.Name, image.Width, image.Height)
+        {
+            FilePath = file.Path,
+        };
+        document.ActiveLayer.Image.LoadFromBgra(BgraOf(image));
+        return document;
+    }
+
+    /// <summary>OS が読める画像（PNG・BMP・JPEG など。クリップボードの画像も）を1枚の画像にする。</summary>
+    public static async Task<PixelImage> DecodeAsync(IRandomAccessStream stream)
+    {
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+        if (decoder.PixelWidth > PixelImage.MaxSize || decoder.PixelHeight > PixelImage.MaxSize)
+        {
+            throw new InvalidOperationException($"画像が大きすぎます（{decoder.PixelWidth}×{decoder.PixelHeight}）。{PixelImage.MaxSize}×{PixelImage.MaxSize} までに対応しています。");
+        }
+
         PixelDataProvider data = await decoder.GetPixelDataAsync(
             BitmapPixelFormat.Bgra8,
             BitmapAlphaMode.Straight,
             new BitmapTransform(),
             ExifOrientationMode.IgnoreExifOrientation,
             ColorManagementMode.DoNotColorManage);
+        var image = new PixelImage((int)decoder.PixelWidth, (int)decoder.PixelHeight);
+        image.LoadFromBgra(data.DetachPixelData());
+        return image;
+    }
 
-        var document = new PixelDocument(file.Name, (int)decoder.PixelWidth, (int)decoder.PixelHeight)
-        {
-            FilePath = file.Path,
-        };
-        document.ActiveLayer.Image.LoadFromBgra(data.DetachPixelData());
-        return document;
+    private static byte[] BgraOf(PixelImage image)
+    {
+        var bytes = new byte[image.Width * image.Height * 4];
+        image.CopyToBgra(bytes);
+        return bytes;
     }
 
     /// <summary>表示中のレイヤーを統合して1枚のPNGとして保存する。</summary>

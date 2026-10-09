@@ -249,6 +249,13 @@ public sealed partial class MainWindow : Window
         AddShortcut(VirtualKey.Z, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, Redo);
         AddShortcut(VirtualKey.A, VirtualKeyModifiers.Control, SelectAll);
         AddShortcut(VirtualKey.D, VirtualKeyModifiers.Control, Deselect);
+        AddShortcut(VirtualKey.C, VirtualKeyModifiers.Control, () => ErrorLog.Run("コピー", () => CopyAsync(cut: false)));
+        AddShortcut(VirtualKey.X, VirtualKeyModifiers.Control, () => ErrorLog.Run("切り取り", () => CopyAsync(cut: true)));
+        AddShortcut(VirtualKey.V, VirtualKeyModifiers.Control, () => ErrorLog.Run("貼り付け", PasteAsync));
+        AddShortcut(VirtualKey.H, VirtualKeyModifiers.Shift, FlipSelectionHorizontal);
+        AddShortcut(VirtualKey.V, VirtualKeyModifiers.Shift, FlipSelectionVertical);
+        AddShortcut(VirtualKey.R, VirtualKeyModifiers.Shift, () => RotateSelection(clockwise: true));
+        AddShortcut(VirtualKey.L, VirtualKeyModifiers.Shift, () => RotateSelection(clockwise: false));
         AddShortcut(VirtualKey.N, VirtualKeyModifiers.Control, () => ErrorLog.Run("新規作成", NewDocumentWithDialogAsync));
         AddShortcut(VirtualKey.O, VirtualKeyModifiers.Control, () => ErrorLog.Run("開く", OpenAsync));
         AddShortcut(VirtualKey.S, VirtualKeyModifiers.Control, () => ErrorLog.Run("保存", SaveCurrentAsync));
@@ -835,6 +842,13 @@ public sealed partial class MainWindow : Window
         {
             // Alt+クリックは、どの道具でもスポイト（表示中の色を拾う）
             PickColor(tab, ToImage(tab, point.Position));
+            e.Handled = true;
+            return;
+        }
+        else if (props.IsRightButtonPressed && _tool == Tool.Select)
+        {
+            // 選択ツールの右クリックは、コピー・反転などのメニュー
+            ShowSelectionMenu(point.Position);
             e.Handled = true;
             return;
         }
