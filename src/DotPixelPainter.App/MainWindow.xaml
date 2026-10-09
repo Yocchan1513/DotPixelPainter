@@ -28,7 +28,19 @@
             TabWidthMode="SizeToContent"
             AddTabButtonClick="Tabs_AddTabButtonClick"
             TabCloseRequested="Tabs_TabCloseRequested"
-            SelectionChanged="Tabs_SelectionChanged" />
+            SelectionChanged="Tabs_SelectionChanged">
+            <!-- タブの並びの右端（ウィンドウが狭くても隠れない） -->
+            <TabView.TabStripFooter>
+                <Button
+                    Margin="0,0,8,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Padding="10,4"
+                    Content="…"
+                    Click="More_Click"
+                    ToolTipService.ToolTip="その他（ファイルの関連付けなど）" />
+            </TabView.TabStripFooter>
+        </TabView>
 
         <!-- ツールバー -->
         <StackPanel

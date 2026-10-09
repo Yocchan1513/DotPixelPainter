@@ -23,6 +23,8 @@
     <SatelliteResourceLanguages>ja;en</SatelliteResourceLanguages>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- 入り口（Main）は Program.cs に自前で書く（すでに開いているアプリにファイルを送るため） -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <!-- Win32 API の呼び出し（LibraryImport）に必要 -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
