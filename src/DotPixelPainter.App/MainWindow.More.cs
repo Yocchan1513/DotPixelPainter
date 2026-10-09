@@ -10,6 +10,7 @@ public sealed partial class MainWindow
 {
     private MenuFlyout? _moreMenu;
     private MenuFlyoutItem? _associationItem;
+    private ToggleMenuFlyoutItem? _restoreItem;
 
     private void More_Click(object sender, RoutedEventArgs e)
     {
@@ -19,6 +20,10 @@ public sealed partial class MainWindow
             _associationItem = new MenuFlyoutItem();
             _associationItem.Click += (_, _) => ErrorLog.Run("関連付け", ToggleAssociationAsync);
             _moreMenu.Items.Add(_associationItem);
+
+            _restoreItem = new ToggleMenuFlyoutItem { Text = "起動時に前回のタブを開き直す" };
+            _restoreItem.Click += (_, _) => _restoreSession = _restoreItem.IsChecked;
+            _moreMenu.Items.Add(_restoreItem);
             _moreMenu.Items.Add(new MenuFlyoutSeparator());
 
             var log = new MenuFlyoutItem { Text = "エラーの記録があるフォルダを開く" };
@@ -31,6 +36,7 @@ public sealed partial class MainWindow
             _moreMenu.Items.Add(log);
         }
 
+        _restoreItem!.IsChecked = _restoreSession;
         _associationItem!.Text = FileAssociation.IsRegistered()
             ? ".dotpix の関連付けを解除する"
             : ".dotpix をダブルクリックでこのアプリで開くようにする";

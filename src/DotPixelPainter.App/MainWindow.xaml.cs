@@ -65,6 +65,14 @@ public sealed partial class MainWindow : Window
         BuildToolPanel();
         _probe.Mark("tools");
         AddKeyboardShortcuts();
+        // 終了時に開いていたファイルを覚える（計測やテストで起動したときは、本来の記録を上書きしない）
+        Closed += (_, _) =>
+        {
+            if (ShouldRestoreSession() || _probe.FilesToOpen.Count > 0)
+            {
+                SaveSession();
+            }
+        };
         InitializePanels();
         AddTab(CreateUntitled());
         _probe.Mark("tab");
@@ -415,32 +423,43 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>起動時に渡されたファイルを開く。何も描いていない最初の「無題」タブは閉じる。</summary>
-    private async Task OpenStartupFilesAsync()
+    private Task OpenStartupFilesAsync() => OpenFilesReplacingBlankAsync(_probe.FilesToOpen, reportErrors: true);
+
+    /// <summary>
+    /// ファイルを順に開く。1つでも開けたら、何も描いていない最初の「無題」タブは閉じる。
+    /// reportErrors が false なら、開けなかったファイルは黙って飛ばす（前回のタブの復元で、消えたファイルなど）。
+    /// </summary>
+    private async Task<int> OpenFilesReplacingBlankAsync(IEnumerable<string> paths, bool reportErrors)
     {
         TabViewItem? blank = Tabs.TabItems.Count == 1
             && Tabs.TabItems[0] is TabViewItem only
             && _tabs[only].Document.FilePath is null
             && !_tabs[only].Document.History.CanUndo ? only : null;
 
-        bool opened = false;
-        foreach (string path in _probe.FilesToOpen)
+        int opened = 0;
+        foreach (string path in paths)
         {
             try
             {
                 await OpenDocumentAsync(await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)));
-                opened = true;
+                opened++;
             }
             catch (Exception ex)
             {
-                await ShowMessageAsync("開けませんでした", $"{path}\n{ex.Message}");
+                if (reportErrors)
+                {
+                    await ShowMessageAsync("開けませんでした", $"{path}\n{ex.Message}");
+                }
             }
         }
 
-        if (opened && blank is not null)
+        if (opened > 0 && blank is not null)
         {
             Tabs.TabItems.Remove(blank);
             _tabs.Remove(blank);
         }
+
+        return opened;
     }
 
     private static bool IsDotPix(string path) =>
@@ -751,9 +770,14 @@ public sealed partial class MainWindow : Window
 
                 RestorePanelLayout();
 
+                _restoreSession = LoadSession().Restore;
                 if (_probe.FilesToOpen.Count > 0)
                 {
                     ErrorLog.Run("起動時のファイルを開く", OpenStartupFilesAsync);
+                }
+                else if (ShouldRestoreSession())
+                {
+                    ErrorLog.Run("前回のタブを開き直す", RestoreSessionAsync);
                 }
 
                 if (_probe.TestOpen == "tile")
