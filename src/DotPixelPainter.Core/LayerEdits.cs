@@ -161,3 +161,27 @@ internal sealed class ImageTransformEdit(
         document.SetSize(w, h);
     }
 }
+
+/// <summary>いくつかの操作を1回分としてまとめる（すべてのレイヤーの色を変えるときなど）。</summary>
+internal sealed class GroupEdit(HistoryEntry[] entries) : HistoryEntry
+{
+    public override long ByteSize => entries.Sum(e => e.ByteSize);
+
+    internal override void Apply(bool undo)
+    {
+        if (undo)
+        {
+            for (int i = entries.Length - 1; i >= 0; i--)
+            {
+                entries[i].Apply(undo: true);
+            }
+        }
+        else
+        {
+            foreach (HistoryEntry entry in entries)
+            {
+                entry.Apply(undo: false);
+            }
+        }
+    }
+}

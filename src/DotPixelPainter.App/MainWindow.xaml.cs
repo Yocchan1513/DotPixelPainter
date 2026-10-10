@@ -890,6 +890,14 @@ public sealed partial class MainWindow : Window
                     fill.Commit();
                     AfterHistoryChange(patternTab);
                 }
+                else if (_probe.TestOpen == "replace-color")
+                {
+                    ErrorLog.Run("色の置き換え（テスト）", async () => { await _startupOpen; await ShowReplaceColorDialogAsync(); });
+                }
+                else if (_probe.TestOpen == "reduce-colors")
+                {
+                    ErrorLog.Run("減色（テスト）", async () => { await _startupOpen; await ShowReduceColorsDialogAsync(); });
+                }
                 else if (_probe.TestOpen == "rotate")
                 {
                     ErrorLog.Run("回転（テスト）", async () =>

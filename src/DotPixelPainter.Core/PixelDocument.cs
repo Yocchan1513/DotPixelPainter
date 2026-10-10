@@ -195,6 +195,70 @@ public sealed class PixelDocument
         return true;
     }
 
+    // ---- 色の一括変更（すべて元に戻せる） ----
+
+    /// <summary>from の色の画素をすべて to にする。変えた画素数を返す。</summary>
+    public int ReplaceColor(uint from, uint to, bool allLayers, PixelRect? area = null) =>
+        Recolor(c => c == from ? to : c, allLayers, area);
+
+    /// <summary>透明でない画素を、palette の中のいちばん近い色にする（不透明度はそのまま）。変えた画素数を返す。</summary>
+    public int ReduceColors(IReadOnlyList<uint> palette, bool allLayers, PixelRect? area = null) =>
+        palette.Count == 0 ? 0 : Recolor(c => c >> 24 == 0 ? c : ColorTools.Nearest(c, palette), allLayers, area);
+
+    /// <summary>対象のレイヤー（今のレイヤーか、すべて）の画素の色を map で変え、まとめて1回の操作として積む。</summary>
+    private int Recolor(Func<uint, uint> map, bool allLayers, PixelRect? area)
+    {
+        var edits = new List<HistoryEntry>();
+        int changed = 0;
+        var cache = new Dictionary<uint, uint>();
+        foreach (Layer layer in allLayers ? _layers : [ActiveLayer])
+        {
+            PixelImage image = layer.Image;
+            if ((area ?? new PixelRect(0, 0, Width, Height)).Intersect(new PixelRect(0, 0, image.Width, image.Height)) is not { } r)
+            {
+                continue; // 範囲が画像の外
+            }
+
+            var indices = new List<int>();
+            var before = new List<uint>();
+            var after = new List<uint>();
+            ReadOnlySpan<uint> pixels = image.Pixels;
+            for (int y = r.Y; y < r.Bottom; y++)
+            {
+                for (int x = r.X; x < r.Right; x++)
+                {
+                    int index = y * image.Width + x;
+                    uint old = pixels[index];
+                    if (!cache.TryGetValue(old, out uint now))
+                    {
+                        now = map(old);
+                        cache[old] = now;
+                    }
+
+                    if (now != old)
+                    {
+                        indices.Add(index);
+                        before.Add(old);
+                        after.Add(now);
+                    }
+                }
+            }
+
+            if (indices.Count > 0)
+            {
+                edits.Add(new PixelEdit(layer, [.. indices], [.. before], [.. after]));
+                changed += indices.Count;
+            }
+        }
+
+        if (edits.Count > 0)
+        {
+            Push(new GroupEdit([.. edits]));
+        }
+
+        return changed;
+    }
+
     internal void SetSize(int width, int height)
     {
         Width = width;

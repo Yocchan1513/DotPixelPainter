@@ -393,6 +393,7 @@
                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
                                         <MenuFlyoutItem Text="GIMPパレット（.gpl）を読み込む" Click="ImportPalette_Click" />
                                         <MenuFlyoutItem Text="GIMPパレット（.gpl）に書き出す" Click="ExportPalette_Click" />
+                                        <MenuFlyoutItem Text="絵で使っている色を取り込む" Click="ImportUsedColors_Click" />
                                         <MenuFlyoutSeparator />
                                         <MenuFlyoutItem Text="初期パレットに戻す" Click="ResetPalette_Click" />
                                     </MenuFlyout>
