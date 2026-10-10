@@ -29,6 +29,7 @@ public sealed partial class MainWindow
         text.Children.Add(new TextBlock { Text = "DotPixelPainter", FontSize = 20, FontWeight = FontWeights.SemiBold });
         text.Children.Add(new TextBlock { Text = $"バージョン {AppVersion.TrimStart('v')}" });
         text.Children.Add(new TextBlock { Text = "ドット絵とMinecraftスキンのためのお絵かきソフト", TextWrapping = TextWrapping.Wrap });
+        text.Children.Add(new TextBlock { Text = "© 2026 Yocchan1513　MIT License", FontSize = 12, Opacity = 0.8 });
         text.Children.Add(status);
         text.Children.Add(download);
 
