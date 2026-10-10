@@ -68,6 +68,7 @@ public sealed partial class MainWindow : Window
         // 標準のタイトルバーの明暗を、アプリのテーマ（＝Windows の設定）に合わせる
         ApplyTitleBarTheme(Application.Current.RequestedTheme == ApplicationTheme.Dark);
         Root.ActualThemeChanged += (s, _) => ApplyTitleBarTheme(s.ActualTheme == ElementTheme.Dark);
+        Root.SizeChanged += (_, e) => UpdatePanelForWidth(e.NewSize.Width);
 
         VersionText.Text = AppVersion;
         InitializePalette();

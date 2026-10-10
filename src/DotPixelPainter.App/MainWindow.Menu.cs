@@ -97,6 +97,7 @@ public sealed partial class MainWindow
         AddToggle(ViewMenu, "グリッド", GridToggle, () => RedrawAll());
         AddToggle(ViewMenu, "左右反転表示", FlipToggle, () => RedrawAll());
         AddToggle(ViewMenu, "スキンとして編集", SkinToggle, () => SkinToggle_Click(SkinToggle, new RoutedEventArgs()));
+        AddToggle(ViewMenu, "右のパネル", PanelToggle, () => PanelToggle_Click(PanelToggle, new RoutedEventArgs()));
         ViewMenu.Items.Add(new MenuFlyoutSeparator());
         _transparencyMenu = CreateTransparencyMenu();
         UpdateTransparencyMenu(_transparencyMenu);
