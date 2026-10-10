@@ -843,6 +843,8 @@ public sealed partial class MainWindow : Window
 
                 _restoreSession = LoadSession().Restore;
                 BuildMenus();
+                AddPatternItems();
+                PixelPerfectBox.IsChecked = ViewSettings.Get("pixel-perfect") == "on";
                 if (_probe.FilesToOpen.Count > 0)
                 {
                     _startupOpen = OpenStartupFilesAsync();
@@ -878,6 +880,28 @@ public sealed partial class MainWindow : Window
                 else if (_probe.TestOpen == "export")
                 {
                     ErrorLog.Run("拡大して書き出し（テスト）", async () => { await _startupOpen; await ExportScaledAsync(); });
+                }
+                else if (_probe.TestOpen == "pattern-fill" && CurrentTab is { } patternTab)
+                {
+                    // 市松のパターンを選び、すき間を背景色にして全体を塗る
+                    PatternBox.SelectedIndex = 2;
+                    PatternGapBox.IsChecked = true;
+                    PixelStroke fill = patternTab.Document.BeginStroke(_mask, CurrentPattern(erase: false));
+                    fill.FloodFill(0, 0, 0xFF3060C0);
+                    fill.Commit();
+                    AfterHistoryChange(patternTab);
+                }
+                else if (_probe.TestOpen == "replace-color")
+                {
+                    ErrorLog.Run("色の置き換え（テスト）", async () => { await _startupOpen; await ShowReplaceColorDialogAsync(); });
+                }
+                else if (_probe.TestOpen == "reduce-colors")
+                {
+                    ErrorLog.Run("減色（テスト）", async () => { await _startupOpen; await ShowReduceColorsDialogAsync(); });
+                }
+                else if (_probe.TestOpen == "cleanup")
+                {
+                    ErrorLog.Run("線の整形（テスト）", async () => { await _startupOpen; CleanupLines(); });
                 }
                 else if (_probe.TestOpen == "rotate")
                 {
@@ -1152,6 +1176,7 @@ public sealed partial class MainWindow : Window
         _stroke.Commit();
         RefreshHeader(_strokeTab);
         _stroke = null;
+        _pixelPath = null;
         _strokeTab = null;
         UpdateUndoButtons();
     }
@@ -1177,9 +1202,24 @@ public sealed partial class MainWindow : Window
         }
 
         bool changed = false;
-        foreach ((int x, int y) in _brush.Stamp(points))
+        if (_pixelPath is not null)
         {
-            changed |= _stroke.Plot(x, y, _paintColor);
+            // 1px の自由線: 塗りながら、L字の角の余分な1ドットを塗る前の色に戻す
+            foreach ((int x, int y) in points)
+            {
+                changed |= _stroke.Plot(x, y, _paintColor);
+                if (_pixelPath.Add(x, y) is { } extra)
+                {
+                    changed |= _stroke.Restore(extra.X, extra.Y);
+                }
+            }
+        }
+        else
+        {
+            foreach ((int x, int y) in _brush.Stamp(points))
+            {
+                changed |= _stroke.Plot(x, y, _paintColor);
+            }
         }
 
         if (!changed)
@@ -1234,7 +1274,7 @@ public sealed partial class MainWindow : Window
         ZoomText.Text = $"{tab.Zoom * 100}%";
         string pos = position is { } p && tab.Document.ActiveLayer.Image.Contains(p.X, p.Y) ? $"{p.X}, {p.Y}" : "-";
         string skin = IsSkinTab(tab) && SkinStatus() is { Length: > 0 } part ? $"　｜　{part}" : "";
-        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}";
+        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{PatternStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}";
     }
 
     private static Color ToColor(uint argb) =>

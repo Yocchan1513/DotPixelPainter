@@ -277,6 +277,20 @@
                         Value="1"
                         ValueChanged="BrushSizeSlider_ValueChanged"
                         ToolTipService.ToolTip="ペン先の大きさ（[ と ] でも変えられる）" />
+                    <CheckBox
+                        x:Name="PixelPerfectBox"
+                        Content="1pxの線の角を整える"
+                        Click="PixelPerfect_Click"
+                        ToolTipService.ToolTip="ピクセルパーフェクト: 1pxの自由線で、角にできる余分な1ドット（L字の真ん中）を描きながら消す" />
+
+                    <!-- ディザ（網かけ）のパターン塗り。選択肢は最初の描画のあとで足す（MainWindow.Pattern.cs） -->
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock Text="パターン" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox x:Name="PatternBox" HorizontalAlignment="Right" MinWidth="110" SelectedIndex="0" SelectionChanged="Pattern_SelectionChanged" ToolTipService.ToolTip="ペン・図形・塗りつぶしを網かけの模様で塗る">
+                            <ComboBoxItem Content="なし" />
+                        </ComboBox>
+                    </Grid>
+                    <CheckBox x:Name="PatternGapBox" Content="すき間を背景色で塗る" Visibility="Collapsed" Click="PatternGap_Click" />
 
                     <!-- カラーマスク（AzPainter2 のマスク／逆マスクにあたる） -->
                     <Grid Margin="0,4,0,0">
@@ -384,6 +398,7 @@
                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
                                         <MenuFlyoutItem Text="GIMPパレット（.gpl）を読み込む" Click="ImportPalette_Click" />
                                         <MenuFlyoutItem Text="GIMPパレット（.gpl）に書き出す" Click="ExportPalette_Click" />
+                                        <MenuFlyoutItem Text="絵で使っている色を取り込む" Click="ImportUsedColors_Click" />
                                         <MenuFlyoutSeparator />
                                         <MenuFlyoutItem Text="初期パレットに戻す" Click="ResetPalette_Click" />
                                     </MenuFlyout>

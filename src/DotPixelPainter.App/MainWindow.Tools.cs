@@ -241,7 +241,7 @@ public sealed partial class MainWindow
 
         if (_tool == Tool.Fill)
         {
-            PixelStroke fill = tab.Document.BeginStroke(_mask);
+            PixelStroke fill = tab.Document.BeginStroke(_mask, CurrentPattern(color == 0));
             if (fill.FloodFill(p.X, p.Y, color) > 0)
             {
                 fill.Commit();
@@ -256,7 +256,8 @@ public sealed partial class MainWindow
         if (_shape == ShapeKind.Freehand)
         {
             _drag = DragMode.Paint;
-            _stroke = tab.Document.BeginStroke(_mask);
+            _stroke = tab.Document.BeginStroke(_mask, CurrentPattern(color == 0));
+            _pixelPath = PixelPerfectBox.IsChecked == true && _brush.Size == 1 ? new PixelPerfectPath() : null;
             (_lastX, _lastY) = p;
             Paint(tab, [p]);
         }
@@ -331,7 +332,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        PixelStroke stroke = tab.Document.BeginStroke(_mask);
+        PixelStroke stroke = tab.Document.BeginStroke(_mask, CurrentPattern(_paintColor == 0));
         if (stroke.PlotSpans(CurrentShapeSpans(), _paintColor))
         {
             stroke.Commit();
@@ -352,6 +353,7 @@ public sealed partial class MainWindow
         }
 
         Color color = _paintColor == 0 ? EraserPreviewColor : ToColor(_paintColor);
+        DrawPattern? pattern = CurrentPattern(_paintColor == 0);
         int width = tab.Document.Width;
         foreach (PixelSpan s in CurrentShapeSpans())
         {
@@ -367,6 +369,23 @@ public sealed partial class MainWindow
                 continue;
             }
 
+            if (pattern is not null)
+            {
+                // パターンのときは、実際に塗る画素だけを1つずつ描く
+                for (int x = x0; x <= x1; x++)
+                {
+                    if (pattern.ColorAt(x, s.Y, _paintColor) is not { } c)
+                    {
+                        continue;
+                    }
+
+                    int sx = IsFlipped ? width - 1 - x : x;
+                    ds.FillRectangle((float)imageRect.X + sx * cell, (float)imageRect.Y + s.Y * cell, cell, cell, c == 0 ? EraserPreviewColor : ToColor(c));
+                }
+
+                continue;
+            }
+
             if (IsFlipped)
             {
                 (x0, x1) = (width - 1 - x1, width - 1 - x0);
@@ -378,6 +397,29 @@ public sealed partial class MainWindow
                 (x1 - x0 + 1) * cell,
                 cell,
                 color);
+        }
+    }
+
+    /// <summary>ピクセルパーフェクト（1px の自由線の角を整える）で描いている道筋。使わないときは null。</summary>
+    private PixelPerfectPath? _pixelPath;
+
+    private void PixelPerfect_Click(object sender, RoutedEventArgs e) =>
+        ViewSettings.Set("pixel-perfect", PixelPerfectBox.IsChecked == true ? "on" : "off");
+
+    /// <summary>「画像」→「線の整形」。今のレイヤーの（選択範囲があればその中の）1px の線の角を整える。</summary>
+    private void CleanupLines()
+    {
+        if (CurrentTab is not { } tab)
+        {
+            return;
+        }
+
+        PixelRect? area = tab.Selection;
+        int changed = 0;
+        ImageAction(d => (changed = d.CleanupLines(area)) > 0);
+        if (changed == 0)
+        {
+            ErrorLog.Run("線の整形", () => ShowMessageAsync("線の整形", "整える角は見つかりませんでした（1pxの線の、L字になった角の余分な1ドットを消します）。"));
         }
     }
 }

@@ -70,6 +70,12 @@ public sealed partial class MainWindow
         Add(ImageMenu, "上下反転", null, () => ImageAction(d => d.FlipImage(horizontal: false)));
         Add(ImageMenu, "右に90°回転", null, () => ImageAction(d => d.RotateImage(clockwise: true)));
         Add(ImageMenu, "左に90°回転", null, () => ImageAction(d => d.RotateImage(clockwise: false)));
+        ImageMenu.Items.Add(new MenuFlyoutSeparator());
+        Add(ImageMenu, "色の置き換え...", null, () => ErrorLog.Run("色の置き換え", ShowReplaceColorDialogAsync));
+        Add(ImageMenu, "減色...", null, () => ErrorLog.Run("減色", ShowReduceColorsDialogAsync));
+        Add(ImageMenu, "使っている色をパレットに取り込む...", null, () => ErrorLog.Run("パレットに取り込む", ImportUsedColorsAsync));
+        ImageMenu.Items.Add(new MenuFlyoutSeparator());
+        Add(ImageMenu, "線の整形（角の余分な1ドットを消す）", null, CleanupLines);
 
         // 選択範囲
         Add(SelectMenu, "すべて選択", "Ctrl+A", SelectAll);
