@@ -94,7 +94,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="232" />
             </Grid.ColumnDefinitions>
 
             <!-- ツール: 縦1列の細い帯。上が道具、区切り線の下が描き方 -->
@@ -127,13 +127,14 @@
 
             <Border
                 Grid.Column="2"
-                Padding="12"
+                Padding="12,12,0,12"
                 Background="{ThemeResource LayerFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1,0,0,0">
                 <!-- ウィンドウが低いときはスクロールできるようにする -->
+                <!-- スクロールバーは中身の上に重なって出るので、右側にその分の余白を空ける -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="12">
+                <StackPanel Spacing="12" Margin="0,0,14,0">
                     <!--
                         パネル: 外側の Border（*Slot）が置き場所、内側の StackPanel（*Section）が中身。
                         切り離すと Section だけが別ウィンドウへ移り、Slot は隠れる。
