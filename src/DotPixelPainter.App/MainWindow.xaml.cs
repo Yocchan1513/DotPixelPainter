@@ -903,6 +903,15 @@ public sealed partial class MainWindow : Window
                 {
                     ErrorLog.Run("線の整形（テスト）", async () => { await _startupOpen; CleanupLines(); });
                 }
+                else if (_probe.TestOpen == "skin")
+                {
+                    ErrorLog.Run("スキン表示（テスト）", async () =>
+                    {
+                        await _startupOpen;
+                        SkinToggle.IsChecked = true;
+                        SkinToggle_Click(SkinToggle, new RoutedEventArgs());
+                    });
+                }
                 else if (_probe.TestOpen == "rotate")
                 {
                     ErrorLog.Run("回転（テスト）", async () =>
