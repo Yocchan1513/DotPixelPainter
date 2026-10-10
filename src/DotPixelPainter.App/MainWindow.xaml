@@ -277,6 +277,11 @@
                         Value="1"
                         ValueChanged="BrushSizeSlider_ValueChanged"
                         ToolTipService.ToolTip="ペン先の大きさ（[ と ] でも変えられる）" />
+                    <CheckBox
+                        x:Name="PixelPerfectBox"
+                        Content="1pxの線の角を整える"
+                        Click="PixelPerfect_Click"
+                        ToolTipService.ToolTip="ピクセルパーフェクト: 1pxの自由線で、角にできる余分な1ドット（L字の真ん中）を描きながら消す" />
 
                     <!-- ディザ（網かけ）のパターン塗り。選択肢は最初の描画のあとで足す（MainWindow.Pattern.cs） -->
                     <Grid Margin="0,4,0,0">

@@ -205,6 +205,38 @@ public sealed class PixelDocument
     public int ReduceColors(IReadOnlyList<uint> palette, bool allLayers, PixelRect? area = null) =>
         palette.Count == 0 ? 0 : Recolor(c => c >> 24 == 0 ? c : ColorTools.Nearest(c, palette), allLayers, area);
 
+    /// <summary>今のレイヤーの 1px の線から、角にできる余分な1ドットを消す（LineCleanup）。変えた画素数を返す。</summary>
+    public int CleanupLines(PixelRect? area = null)
+    {
+        PixelImage image = ActiveLayer.Image;
+        if ((area ?? new PixelRect(0, 0, Width, Height)).Intersect(new PixelRect(0, 0, Width, Height)) is not { } r)
+        {
+            return 0;
+        }
+
+        PixelImage cleaned = image.Clone();
+        if (LineCleanup.Run(cleaned, r) == 0)
+        {
+            return 0;
+        }
+
+        var indices = new List<int>();
+        var before = new List<uint>();
+        var after = new List<uint>();
+        for (int i = 0; i < cleaned.Pixels.Length; i++)
+        {
+            if (cleaned.Pixels[i] != image.Pixels[i])
+            {
+                indices.Add(i);
+                before.Add(image.Pixels[i]);
+                after.Add(cleaned.Pixels[i]);
+            }
+        }
+
+        Push(new PixelEdit(ActiveLayer, [.. indices], [.. before], [.. after]));
+        return indices.Count;
+    }
+
     /// <summary>対象のレイヤー（今のレイヤーか、すべて）の画素の色を map で変え、まとめて1回の操作として積む。</summary>
     private int Recolor(Func<uint, uint> map, bool allLayers, PixelRect? area)
     {

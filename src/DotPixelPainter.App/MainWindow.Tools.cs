@@ -257,6 +257,7 @@ public sealed partial class MainWindow
         {
             _drag = DragMode.Paint;
             _stroke = tab.Document.BeginStroke(_mask, CurrentPattern(color == 0));
+            _pixelPath = PixelPerfectBox.IsChecked == true && _brush.Size == 1 ? new PixelPerfectPath() : null;
             (_lastX, _lastY) = p;
             Paint(tab, [p]);
         }
@@ -396,6 +397,29 @@ public sealed partial class MainWindow
                 (x1 - x0 + 1) * cell,
                 cell,
                 color);
+        }
+    }
+
+    /// <summary>ピクセルパーフェクト（1px の自由線の角を整える）で描いている道筋。使わないときは null。</summary>
+    private PixelPerfectPath? _pixelPath;
+
+    private void PixelPerfect_Click(object sender, RoutedEventArgs e) =>
+        ViewSettings.Set("pixel-perfect", PixelPerfectBox.IsChecked == true ? "on" : "off");
+
+    /// <summary>「画像」→「線の整形」。今のレイヤーの（選択範囲があればその中の）1px の線の角を整える。</summary>
+    private void CleanupLines()
+    {
+        if (CurrentTab is not { } tab)
+        {
+            return;
+        }
+
+        PixelRect? area = tab.Selection;
+        int changed = 0;
+        ImageAction(d => (changed = d.CleanupLines(area)) > 0);
+        if (changed == 0)
+        {
+            ErrorLog.Run("線の整形", () => ShowMessageAsync("線の整形", "整える角は見つかりませんでした（1pxの線の、L字になった角の余分な1ドットを消します）。"));
         }
     }
 }

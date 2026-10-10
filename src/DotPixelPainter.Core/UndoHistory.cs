@@ -205,6 +205,17 @@ public sealed class PixelStroke
         return true;
     }
 
+    /// <summary>このひと筆で塗った画素を、塗る前の色に戻す（ピクセルパーフェクトで余分な角を消すとき）。</summary>
+    public bool Restore(int x, int y)
+    {
+        if (_committed || !_image.Contains(x, y) || !_before.TryGetValue(y * _image.Width + x, out uint original))
+        {
+            return false;
+        }
+
+        return _image.SetPixel(x, y, original);
+    }
+
     /// <summary>区間の集まり（図形）を塗る。1画素でも変わったら true。</summary>
     public bool PlotSpans(IEnumerable<PixelSpan> spans, uint argb)
     {
