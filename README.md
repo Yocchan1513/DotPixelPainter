@@ -10,9 +10,22 @@ Windows 11 向けの、軽くてすぐ起動するピクセルアート（ドッ
 
 フェーズ0（技術検証）。ペンでの描画、PNG の読み書き、タブ、グリッド、左右反転表示、等倍プレビューまで動きます。
 
+## ダウンロード
+
+[Releases](https://github.com/Yocchan1513/DotPixelPainter/releases) から zip をダウンロードし、展開して `DotPixelPainter.exe` を起動します。インストールは不要です。
+
+| ファイル | 向いているPC |
+| --- | --- |
+| `DotPixelPainter-<版>-win-x64.zip` | ふつうのPC（Intel・AMD）。迷ったらこれ |
+| `DotPixelPainter-<版>-win-arm64.zip` | Snapdragon などの ARM の PC（Surface Pro 11 など） |
+| `…-lite.zip` | 軽量版。Windows App Runtime 2.5 以上が入っている PC 向け |
+
+署名のないアプリなので、初めて起動するときに「Windows によって PC が保護されました」と出ることがあります。「詳細情報」→「実行」で起動できます。
+
 ## 動作環境
 
-- Windows 11（x64）
+- Windows 11（x64 / ARM64）
+- 軽量版だけ、[Windows App Runtime](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) 2.5 以上が必要です
 
 ## ビルド
 

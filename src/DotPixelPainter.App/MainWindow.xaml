@@ -32,6 +32,7 @@
             </MenuBar.Resources>
             <MenuBarItem x:Name="FileMenu" Title="ファイル(F)" AccessKey="F" />
             <MenuBarItem x:Name="EditMenu" Title="編集(E)" AccessKey="E" />
+            <MenuBarItem x:Name="ImageMenu" Title="画像(I)" AccessKey="I" />
             <MenuBarItem x:Name="SelectMenu" Title="選択範囲(S)" AccessKey="S" />
             <MenuBarItem x:Name="LayerMenu" Title="レイヤー(L)" AccessKey="L" />
             <MenuBarItem x:Name="ViewMenu" Title="表示(V)" AccessKey="V" />
@@ -39,15 +40,18 @@
         </MenuBar>
 
         <!-- ツールバー（アイコン。何のボタンかはマウスを乗せると出る） -->
-        <StackPanel
+        <Grid
             Grid.Row="1"
             Padding="8,3"
-            Orientation="Horizontal"
-            Spacing="4"
+            ColumnSpacing="4"
             Background="{ThemeResource LayerFillColorDefaultBrush}"
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="0,1,0,1">
-            <StackPanel.Resources>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.Resources>
                 <Style TargetType="FontIcon">
                     <Setter Property="FontSize" Value="16" />
                 </Style>
@@ -57,24 +61,30 @@
                 <Style TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}">
                     <Setter Property="Padding" Value="8,6" />
                 </Style>
-            </StackPanel.Resources>
-            <Button Click="New_Click" AutomationProperties.Name="新規" ToolTipService.ToolTip="新規 (Ctrl+N)"><FontIcon Glyph="&#xE8A5;" /></Button>
-            <Button Click="Open_Click" AutomationProperties.Name="開く" ToolTipService.ToolTip="開く (Ctrl+O)"><FontIcon Glyph="&#xE8E5;" /></Button>
-            <Button Click="Save_Click" AutomationProperties.Name="保存" ToolTipService.ToolTip="上書き保存 (Ctrl+S)"><FontIcon Glyph="&#xE74E;" /></Button>
-            <Button Click="SaveAs_Click" AutomationProperties.Name="別名で保存" ToolTipService.ToolTip="別名で保存：.dotpix（レイヤーを残す）か PNG（1枚にまとめる） (Ctrl+Shift+S)"><FontIcon Glyph="&#xE792;" /></Button>
-            <AppBarSeparator />
-            <Button x:Name="UndoButton" Click="Undo_Click" IsEnabled="False" AutomationProperties.Name="元に戻す" ToolTipService.ToolTip="元に戻す (Ctrl+Z)"><FontIcon Glyph="&#xE7A7;" /></Button>
-            <Button x:Name="RedoButton" Click="Redo_Click" IsEnabled="False" AutomationProperties.Name="やり直し" ToolTipService.ToolTip="やり直し (Ctrl+Y / Ctrl+Shift+Z)"><FontIcon Glyph="&#xE7A6;" /></Button>
-            <AppBarSeparator />
-            <Button Click="ZoomOut_Click" AutomationProperties.Name="縮小" ToolTipService.ToolTip="縮小"><FontIcon Glyph="&#xE71F;" /></Button>
-            <TextBlock x:Name="ZoomText" MinWidth="56" VerticalAlignment="Center" TextAlignment="Center" Text="800%" />
-            <Button Click="ZoomIn_Click" AutomationProperties.Name="拡大" ToolTipService.ToolTip="拡大"><FontIcon Glyph="&#xE8A3;" /></Button>
-            <AppBarSeparator />
-            <ToggleButton x:Name="GridToggle" IsChecked="True" Click="ViewOption_Click" AutomationProperties.Name="グリッド" ToolTipService.ToolTip="1pxグリッド線（4倍以上で表示）"><FontIcon Glyph="&#xF0E2;" /></ToggleButton>
-            <ToggleButton x:Name="FlipToggle" Click="ViewOption_Click" AutomationProperties.Name="左右反転表示" ToolTipService.ToolTip="表示だけを左右反転（絵は変わらない）"><FontIcon Glyph="&#xE8AB;" /></ToggleButton>
-            <AppBarSeparator />
-            <ToggleButton x:Name="SkinToggle" Click="SkinToggle_Click" AutomationProperties.Name="スキン" ToolTipService.ToolTip="Minecraft スキンとして扱う（64×64・64×32 のとき）"><FontIcon Glyph="&#xE77B;" /></ToggleButton>
-        </StackPanel>
+            </Grid.Resources>
+            <!-- 窓が狭いときは横にスクロールできる（右のパネルのボタンは右端に固定して隠れないようにする） -->
+            <ScrollViewer HorizontalScrollBarVisibility="Hidden" HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button Click="New_Click" AutomationProperties.Name="新規" ToolTipService.ToolTip="新規 (Ctrl+N)"><FontIcon Glyph="&#xE8A5;" /></Button>
+                    <Button Click="Open_Click" AutomationProperties.Name="開く" ToolTipService.ToolTip="開く (Ctrl+O)"><FontIcon Glyph="&#xE8E5;" /></Button>
+                    <Button Click="Save_Click" AutomationProperties.Name="保存" ToolTipService.ToolTip="上書き保存 (Ctrl+S)"><FontIcon Glyph="&#xE74E;" /></Button>
+                    <Button Click="SaveAs_Click" AutomationProperties.Name="別名で保存" ToolTipService.ToolTip="別名で保存：.dotpix（レイヤーを残す）か PNG（1枚にまとめる） (Ctrl+Shift+S)"><FontIcon Glyph="&#xE792;" /></Button>
+                    <AppBarSeparator />
+                    <Button x:Name="UndoButton" Click="Undo_Click" IsEnabled="False" AutomationProperties.Name="元に戻す" ToolTipService.ToolTip="元に戻す (Ctrl+Z)"><FontIcon Glyph="&#xE7A7;" /></Button>
+                    <Button x:Name="RedoButton" Click="Redo_Click" IsEnabled="False" AutomationProperties.Name="やり直し" ToolTipService.ToolTip="やり直し (Ctrl+Y / Ctrl+Shift+Z)"><FontIcon Glyph="&#xE7A6;" /></Button>
+                    <AppBarSeparator />
+                    <Button Click="ZoomOut_Click" AutomationProperties.Name="縮小" ToolTipService.ToolTip="縮小"><FontIcon Glyph="&#xE71F;" /></Button>
+                    <TextBlock x:Name="ZoomText" MinWidth="56" VerticalAlignment="Center" TextAlignment="Center" Text="800%" />
+                    <Button Click="ZoomIn_Click" AutomationProperties.Name="拡大" ToolTipService.ToolTip="拡大"><FontIcon Glyph="&#xE8A3;" /></Button>
+                    <AppBarSeparator />
+                    <ToggleButton x:Name="GridToggle" IsChecked="True" Click="ViewOption_Click" AutomationProperties.Name="グリッド" ToolTipService.ToolTip="1pxグリッド線（4倍以上で表示）"><FontIcon Glyph="&#xF0E2;" /></ToggleButton>
+                    <ToggleButton x:Name="FlipToggle" Click="ViewOption_Click" AutomationProperties.Name="左右反転表示" ToolTipService.ToolTip="表示だけを左右反転（絵は変わらない）"><FontIcon Glyph="&#xE8AB;" /></ToggleButton>
+                    <AppBarSeparator />
+                    <ToggleButton x:Name="SkinToggle" Click="SkinToggle_Click" AutomationProperties.Name="スキン" ToolTipService.ToolTip="Minecraft スキンとして扱う（64×64・64×32 のとき）"><FontIcon Glyph="&#xE77B;" /></ToggleButton>
+                </StackPanel>
+            </ScrollViewer>
+            <ToggleButton x:Name="PanelToggle" Grid.Column="1" IsChecked="True" Click="PanelToggle_Click" AutomationProperties.Name="右のパネル" ToolTipService.ToolTip="右のパネルを表示する（ウィンドウが狭いときは自動でたたむ）"><FontIcon Glyph="&#xE8A0;" /></ToggleButton>
+        </Grid>
 
         <!-- 開いているファイルのタブ -->
         <TabView
@@ -93,7 +103,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="220" />
+                <ColumnDefinition x:Name="RightColumn" Width="232" />
             </Grid.ColumnDefinitions>
 
             <!-- ツール: 縦1列の細い帯。上が道具、区切り線の下が描き方 -->
@@ -125,14 +135,16 @@
                 PointerWheelChanged="Canvas_PointerWheelChanged" />
 
             <Border
+                x:Name="RightPanel"
                 Grid.Column="2"
-                Padding="12"
+                Padding="12,12,0,12"
                 Background="{ThemeResource LayerFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1,0,0,0">
                 <!-- ウィンドウが低いときはスクロールできるようにする -->
+                <!-- スクロールバーは中身の上に重なって出るので、右側にその分の余白を空ける -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="12">
+                <StackPanel Spacing="12" Margin="0,0,14,0">
                     <!--
                         パネル: 外側の Border（*Slot）が置き場所、内側の StackPanel（*Section）が中身。
                         切り離すと Section だけが別ウィンドウへ移り、Slot は隠れる。

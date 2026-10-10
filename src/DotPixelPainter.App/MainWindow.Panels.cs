@@ -61,14 +61,14 @@ public sealed partial class MainWindow
     private void Detach(DockPanel panel, RectInt32? bounds)
     {
         double scale = Root.XamlRoot?.RasterizationScale ?? 1.0;
-        double widthDip = Math.Max(panel.Section.ActualWidth, 196) + 24;
+        double widthDip = Math.Max(panel.Section.ActualWidth, 196) + 38;
         double heightDip = Math.Max(panel.Section.ActualHeight, 80) + 24;
 
         panel.Slot.Child = null;
         panel.Slot.Visibility = Visibility.Collapsed;
 
         // 中身が増えて（レイヤーの追加など）ウィンドウからはみ出したらスクロールできるようにする
-        var host = new Grid { Padding = new Thickness(12) };
+        var host = new Grid { Padding = new Thickness(12, 12, 26, 12) }; // 右はスクロールバーの分も空ける
         host.Children.Add(panel.Section);
         var scroller = new ScrollViewer { Content = host, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         AttachShortcuts(scroller);

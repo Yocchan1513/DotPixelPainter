@@ -41,6 +41,9 @@ public sealed partial class MainWindow : Window
     private bool _firstFrameReported;
     private bool _forceClose;
 
+    /// <summary>起動時に渡されたファイルを開き終わるまでの処理（テスト用の操作は、これを待ってから行う）。</summary>
+    private Task _startupOpen = Task.CompletedTask;
+
     private DragMode _drag;
     private PixelStroke? _stroke;
     private DocumentTab? _strokeTab;
@@ -65,6 +68,7 @@ public sealed partial class MainWindow : Window
         // 標準のタイトルバーの明暗を、アプリのテーマ（＝Windows の設定）に合わせる
         ApplyTitleBarTheme(Application.Current.RequestedTheme == ApplicationTheme.Dark);
         Root.ActualThemeChanged += (s, _) => ApplyTitleBarTheme(s.ActualTheme == ElementTheme.Dark);
+        Root.SizeChanged += (_, e) => UpdatePanelForWidth(e.NewSize.Width);
 
         VersionText.Text = AppVersion;
         InitializePalette();
@@ -395,6 +399,18 @@ public sealed partial class MainWindow : Window
     private void AfterHistoryChange(DocumentTab tab)
     {
         tab.ImageChanged = true;
+        if (tab.ShownSize != (tab.Document.Width, tab.Document.Height))
+        {
+            // 画像の大きさが変わった: 選択を外し、画面に収まる倍率で真ん中に出し直す
+            tab.ShownSize = (tab.Document.Width, tab.Document.Height);
+            tab.Selection = null;
+            tab.Zoom = 0;
+            tab.AutoZoom = true;
+            tab.PanX = 0;
+            tab.PanY = 0;
+            UpdateSkinUi();
+        }
+
         RefreshHeader(tab);
         UpdateUndoButtons();
         RefreshLayerList(); // 元に戻すでレイヤーが増減・入れ替わることがある
@@ -829,7 +845,8 @@ public sealed partial class MainWindow : Window
                 BuildMenus();
                 if (_probe.FilesToOpen.Count > 0)
                 {
-                    ErrorLog.Run("起動時のファイルを開く", OpenStartupFilesAsync);
+                    _startupOpen = OpenStartupFilesAsync();
+                    ErrorLog.Run("起動時のファイルを開く", () => _startupOpen);
                 }
                 else if (ShouldRestoreSession())
                 {
@@ -849,6 +866,26 @@ public sealed partial class MainWindow : Window
                 else if (_probe.TestOpen == "about")
                 {
                     ErrorLog.Run("バージョン情報（テスト）", ShowAboutAsync);
+                }
+                else if (_probe.TestOpen == "scale")
+                {
+                    ErrorLog.Run("画像の大きさ（テスト）", async () => { await _startupOpen; await ShowScaleDialogAsync(); });
+                }
+                else if (_probe.TestOpen == "canvas-size")
+                {
+                    ErrorLog.Run("キャンバスの大きさ（テスト）", async () => { await _startupOpen; await ShowCanvasSizeDialogAsync(); });
+                }
+                else if (_probe.TestOpen == "export")
+                {
+                    ErrorLog.Run("拡大して書き出し（テスト）", async () => { await _startupOpen; await ExportScaledAsync(); });
+                }
+                else if (_probe.TestOpen == "rotate")
+                {
+                    ErrorLog.Run("回転（テスト）", async () =>
+                    {
+                        await _startupOpen;
+                        ImageAction(d => d.RotateImage(clockwise: true));
+                    });
                 }
                 else if (_probe.TestOpen?.StartsWith("detach:", StringComparison.Ordinal) == true
                     && _panels.TryGetValue(_probe.TestOpen["detach:".Length..], out DockPanel? panel)

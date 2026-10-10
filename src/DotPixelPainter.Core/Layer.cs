@@ -18,7 +18,8 @@ public sealed class Layer
     /// </summary>
     public string Name { get; internal set; }
 
-    public PixelImage Image { get; }
+    /// <summary>画像の大きさを変える操作（PixelDocument.TransformImage）のときだけ差し替わる。</summary>
+    public PixelImage Image { get; internal set; }
 
     public bool Visible { get; internal set; } = true;
 

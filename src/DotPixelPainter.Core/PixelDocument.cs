@@ -42,9 +42,9 @@ public sealed class PixelDocument
 
     public bool IsLegacySkin => Height == 32;
 
-    public int Width { get; }
+    public int Width { get; private set; }
 
-    public int Height { get; }
+    public int Height { get; private set; }
 
     public IReadOnlyList<Layer> Layers => _layers;
 
@@ -152,6 +152,52 @@ public sealed class PixelDocument
         {
             SetProperty(index, LayerProperty.Name, name.Trim());
         }
+    }
+
+    // ---- 画像全体の操作（大きさ・向き。すべて元に戻せる） ----
+
+    /// <summary>キャンバスの大きさを変える。元の絵を (offsetX, offsetY) に置く。</summary>
+    public bool ResizeCanvas(int width, int height, int offsetX, int offsetY) =>
+        TransformImage(width, height, image => ImageTransform.ResizeCanvas(image, width, height, offsetX, offsetY));
+
+    /// <summary>選んだ範囲だけを残して切り抜く。</summary>
+    public bool Crop(PixelRect rect) => ResizeCanvas(rect.Width, rect.Height, -rect.X, -rect.Y);
+
+    /// <summary>絵を拡大・縮小する（最近傍。ドットがにじまない）。</summary>
+    public bool ScaleImage(int width, int height) =>
+        TransformImage(width, height, image => ImageTransform.ScaleNearest(image, width, height));
+
+    public bool FlipImage(bool horizontal) =>
+        TransformImage(Width, Height, image => ImageTransform.Flip(image, horizontal), force: true);
+
+    public bool RotateImage(bool clockwise) =>
+        TransformImage(Height, Width, image => ImageTransform.Rotate90(image, clockwise), force: true);
+
+    /// <summary>
+    /// すべてのレイヤーの画像を作り直す。大きさが変わらず force でもなければ何もしない（false）。
+    /// </summary>
+    private bool TransformImage(int width, int height, Func<PixelImage, PixelImage> transform, bool force = false)
+    {
+        if (width < 1 || height < 1 || width > PixelImage.MaxSize || height > PixelImage.MaxSize)
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), $"画像サイズは 1〜{PixelImage.MaxSize} の範囲で指定してください。");
+        }
+
+        if (!force && width == Width && height == Height)
+        {
+            return false;
+        }
+
+        var before = _layers.Select(l => l.Image).ToArray();
+        var after = before.Select(transform).ToArray();
+        Push(new ImageTransformEdit(this, [.. _layers], before, after, (Width, Height), (width, height)));
+        return true;
+    }
+
+    internal void SetSize(int width, int height)
+    {
+        Width = width;
+        Height = height;
     }
 
     private void SetProperty(int index, LayerProperty property, object value)
