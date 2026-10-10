@@ -6,7 +6,7 @@
   x64 と ARM64 のそれぞれについて、次の2種類を作る。
     完全版: Windows App SDK を同梱する。展開してすぐ動く。
     軽量版: Windows App SDK を同梱しない。PC に Windows App Runtime 2.5 が必要。
-  デバッグ用の .pdb は外し、THIRD-PARTY-NOTICES.md と使い方の説明を入れる。
+  デバッグ用の .pdb は外し、LICENSE.txt・THIRD-PARTY-NOTICES.md・使い方の説明を入れる。
   版の番号は DotPixelPainter.App.csproj の <Version> から取る。
   できたものは artifacts/package/ に置く。
 
@@ -48,6 +48,7 @@ DotPixelPainter $version
 動作環境
   Windows 11
 
+DotPixelPainter は MIT License です（LICENSE.txt）。
 使用しているソフトウェアのライセンスは THIRD-PARTY-NOTICES.md を見てください。
 https://github.com/Yocchan1513/DotPixelPainter
 "@
@@ -79,6 +80,7 @@ foreach ($rid in $Runtimes) {
 
         Get-ChildItem $out -Filter *.pdb -Recurse | Remove-Item -Force
         Copy-Item (Join-Path $root 'THIRD-PARTY-NOTICES.md') $out
+        Copy-Item (Join-Path $root 'LICENSE') (Join-Path $out 'LICENSE.txt')
         Set-Content -Path (Join-Path $out 'はじめにお読みください.txt') -Value $(if ($lite) { $readmeLite } else { $readmeFull }) -Encoding utf8BOM
 
         $zip = "$out.zip"

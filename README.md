@@ -39,4 +39,4 @@ dotnet build src/DotPixelPainter.App
 
 ## ライセンス
 
-未定です。使用しているライブラリのライセンスは [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) にあります。
+[MIT License](LICENSE) です。使用しているライブラリのライセンスは [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) にあります。
