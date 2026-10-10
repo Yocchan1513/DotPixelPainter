@@ -278,6 +278,15 @@
                         ValueChanged="BrushSizeSlider_ValueChanged"
                         ToolTipService.ToolTip="ペン先の大きさ（[ と ] でも変えられる）" />
 
+                    <!-- ディザ（網かけ）のパターン塗り。選択肢は最初の描画のあとで足す（MainWindow.Pattern.cs） -->
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock Text="パターン" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox x:Name="PatternBox" HorizontalAlignment="Right" MinWidth="110" SelectedIndex="0" SelectionChanged="Pattern_SelectionChanged" ToolTipService.ToolTip="ペン・図形・塗りつぶしを網かけの模様で塗る">
+                            <ComboBoxItem Content="なし" />
+                        </ComboBox>
+                    </Grid>
+                    <CheckBox x:Name="PatternGapBox" Content="すき間を背景色で塗る" Visibility="Collapsed" Click="PatternGap_Click" />
+
                     <!-- カラーマスク（AzPainter2 のマスク／逆マスクにあたる） -->
                     <Grid Margin="0,4,0,0">
                         <TextBlock Text="カラーマスク" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />

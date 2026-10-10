@@ -154,21 +154,36 @@ public sealed class PixelStroke
     private bool _committed;
 
     private readonly ColorMask? _mask;
+    private readonly DrawPattern? _pattern;
 
-    internal PixelStroke(PixelDocument document, Layer layer, ColorMask? mask = null)
+    internal PixelStroke(PixelDocument document, Layer layer, ColorMask? mask = null, DrawPattern? pattern = null)
     {
         _document = document;
         _layer = layer;
         _image = layer.Image;
         _mask = mask is { IsActive: true } ? mask : null;
+        _pattern = pattern;
     }
 
-    /// <summary>1画素を塗る。色が変わったら true。カラーマスクで禁止された画素には塗らない。</summary>
+    /// <summary>
+    /// 1画素を塗る。色が変わったら true。カラーマスクで禁止された画素には塗らない。
+    /// パターンがあるときは、模様の外の画素は塗らない（すき間の色があればその色で塗る）。
+    /// </summary>
     public bool Plot(int x, int y, uint argb)
     {
         if (_committed || !_image.Contains(x, y))
         {
             return false;
+        }
+
+        if (_pattern is not null)
+        {
+            if (_pattern.ColorAt(x, y, argb) is not { } patterned)
+            {
+                return false;
+            }
+
+            argb = patterned;
         }
 
         int index = y * _image.Width + x;
@@ -209,7 +224,7 @@ public sealed class PixelStroke
 
     /// <summary>
     /// 塗りつぶし。(x, y) と同じ色で上下左右につながった範囲を塗る（斜めにはつながない）。
-    /// 塗った画素数を返す。
+    /// 先に範囲を決めてから塗るので、マスクやパターンで塗らない画素があっても止まる。範囲の画素数を返す。
     /// </summary>
     public int FloodFill(int x, int y, uint argb)
     {
@@ -219,45 +234,48 @@ public sealed class PixelStroke
         }
 
         uint target = _image.GetPixel(x, y);
-        if (target == argb)
+        if (target == argb && _pattern is null)
         {
             return 0;
         }
 
-        int count = 0;
+        int width = _image.Width;
+        int height = _image.Height;
+        var inRegion = new bool[width * height];
+        var region = new List<int>();
         var stack = new Stack<(int X, int Y)>();
         stack.Push((x, y));
         while (stack.Count > 0)
         {
             (int sx, int sy) = stack.Pop();
-            if (_image.GetPixel(sx, sy) != target || !_image.Contains(sx, sy))
+            if (inRegion[sy * width + sx] || _image.GetPixel(sx, sy) != target)
             {
                 continue;
             }
 
-            // 左右に伸ばして1行ぶん塗る
+            // 左右に伸ばして1行ぶんを範囲に入れる
             int left = sx;
-            while (left > 0 && _image.GetPixel(left - 1, sy) == target)
+            while (left > 0 && !inRegion[sy * width + left - 1] && _image.GetPixel(left - 1, sy) == target)
             {
                 left--;
             }
 
             int right = sx;
-            while (right < _image.Width - 1 && _image.GetPixel(right + 1, sy) == target)
+            while (right < width - 1 && !inRegion[sy * width + right + 1] && _image.GetPixel(right + 1, sy) == target)
             {
                 right++;
             }
 
             for (int px = left; px <= right; px++)
             {
-                Plot(px, sy, argb);
-                count++;
+                inRegion[sy * width + px] = true;
+                region.Add(sy * width + px);
             }
 
-            // 上下の行で、まだ塗っていない区間の先頭を積む
+            // 上下の行で、まだ範囲に入れていない区間の先頭を積む
             foreach (int ny in (ReadOnlySpan<int>)[sy - 1, sy + 1])
             {
-                if (ny < 0 || ny >= _image.Height)
+                if (ny < 0 || ny >= height)
                 {
                     continue;
                 }
@@ -265,7 +283,7 @@ public sealed class PixelStroke
                 bool inRun = false;
                 for (int px = left; px <= right; px++)
                 {
-                    bool match = _image.GetPixel(px, ny) == target;
+                    bool match = !inRegion[ny * width + px] && _image.GetPixel(px, ny) == target;
                     if (match && !inRun)
                     {
                         stack.Push((px, ny));
@@ -276,7 +294,12 @@ public sealed class PixelStroke
             }
         }
 
-        return count;
+        foreach (int index in region)
+        {
+            Plot(index % width, index / width, argb);
+        }
+
+        return region.Count;
     }
 
     /// <summary>履歴に積む。実際に色が変わった画素がなければ何も積まない。</summary>

@@ -843,6 +843,7 @@ public sealed partial class MainWindow : Window
 
                 _restoreSession = LoadSession().Restore;
                 BuildMenus();
+                AddPatternItems();
                 if (_probe.FilesToOpen.Count > 0)
                 {
                     _startupOpen = OpenStartupFilesAsync();
@@ -878,6 +879,16 @@ public sealed partial class MainWindow : Window
                 else if (_probe.TestOpen == "export")
                 {
                     ErrorLog.Run("拡大して書き出し（テスト）", async () => { await _startupOpen; await ExportScaledAsync(); });
+                }
+                else if (_probe.TestOpen == "pattern-fill" && CurrentTab is { } patternTab)
+                {
+                    // 市松のパターンを選び、すき間を背景色にして全体を塗る
+                    PatternBox.SelectedIndex = 2;
+                    PatternGapBox.IsChecked = true;
+                    PixelStroke fill = patternTab.Document.BeginStroke(_mask, CurrentPattern(erase: false));
+                    fill.FloodFill(0, 0, 0xFF3060C0);
+                    fill.Commit();
+                    AfterHistoryChange(patternTab);
                 }
                 else if (_probe.TestOpen == "rotate")
                 {
@@ -1234,7 +1245,7 @@ public sealed partial class MainWindow : Window
         ZoomText.Text = $"{tab.Zoom * 100}%";
         string pos = position is { } p && tab.Document.ActiveLayer.Image.Contains(p.X, p.Y) ? $"{p.X}, {p.Y}" : "-";
         string skin = IsSkinTab(tab) && SkinStatus() is { Length: > 0 } part ? $"　｜　{part}" : "";
-        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}";
+        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{PatternStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}";
     }
 
     private static Color ToColor(uint argb) =>

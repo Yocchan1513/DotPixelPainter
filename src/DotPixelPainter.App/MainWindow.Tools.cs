@@ -241,7 +241,7 @@ public sealed partial class MainWindow
 
         if (_tool == Tool.Fill)
         {
-            PixelStroke fill = tab.Document.BeginStroke(_mask);
+            PixelStroke fill = tab.Document.BeginStroke(_mask, CurrentPattern(color == 0));
             if (fill.FloodFill(p.X, p.Y, color) > 0)
             {
                 fill.Commit();
@@ -256,7 +256,7 @@ public sealed partial class MainWindow
         if (_shape == ShapeKind.Freehand)
         {
             _drag = DragMode.Paint;
-            _stroke = tab.Document.BeginStroke(_mask);
+            _stroke = tab.Document.BeginStroke(_mask, CurrentPattern(color == 0));
             (_lastX, _lastY) = p;
             Paint(tab, [p]);
         }
@@ -331,7 +331,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        PixelStroke stroke = tab.Document.BeginStroke(_mask);
+        PixelStroke stroke = tab.Document.BeginStroke(_mask, CurrentPattern(_paintColor == 0));
         if (stroke.PlotSpans(CurrentShapeSpans(), _paintColor))
         {
             stroke.Commit();
@@ -352,6 +352,7 @@ public sealed partial class MainWindow
         }
 
         Color color = _paintColor == 0 ? EraserPreviewColor : ToColor(_paintColor);
+        DrawPattern? pattern = CurrentPattern(_paintColor == 0);
         int width = tab.Document.Width;
         foreach (PixelSpan s in CurrentShapeSpans())
         {
@@ -364,6 +365,23 @@ public sealed partial class MainWindow
             int x1 = Math.Min(s.X1, width - 1);
             if (x0 > x1)
             {
+                continue;
+            }
+
+            if (pattern is not null)
+            {
+                // パターンのときは、実際に塗る画素だけを1つずつ描く
+                for (int x = x0; x <= x1; x++)
+                {
+                    if (pattern.ColorAt(x, s.Y, _paintColor) is not { } c)
+                    {
+                        continue;
+                    }
+
+                    int sx = IsFlipped ? width - 1 - x : x;
+                    ds.FillRectangle((float)imageRect.X + sx * cell, (float)imageRect.Y + s.Y * cell, cell, cell, c == 0 ? EraserPreviewColor : ToColor(c));
+                }
+
                 continue;
             }
 

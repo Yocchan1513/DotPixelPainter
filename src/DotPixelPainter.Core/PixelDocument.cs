@@ -62,7 +62,8 @@ public sealed class PixelDocument
 
     /// <summary>アクティブなレイヤーにひと筆描き始める。描き終わったら Commit を呼ぶ。</summary>
     /// <remarks>mask を渡すと、カラーマスクで禁止された画素には描かない（描く道具のときだけ渡す）。</remarks>
-    public PixelStroke BeginStroke(ColorMask? mask = null) => new(this, ActiveLayer, mask);
+    /// <remarks>pattern を渡すと、ディザのパターンで塗る。</remarks>
+    public PixelStroke BeginStroke(ColorMask? mask = null, DrawPattern? pattern = null) => new(this, ActiveLayer, mask, pattern);
 
     /// <summary>選択するだけで、履歴には積まない。</summary>
     public void SelectLayer(int index)
