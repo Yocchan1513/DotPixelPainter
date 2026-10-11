@@ -50,6 +50,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Grid.Resources>
                 <Style TargetType="FontIcon">
@@ -83,7 +84,8 @@
                     <ToggleButton x:Name="SkinToggle" Click="SkinToggle_Click" AutomationProperties.Name="{x:Bind local:Texts.Skin}" ToolTipService.ToolTip="{x:Bind local:Texts.SkinTip}"><FontIcon Glyph="&#xE77B;" /></ToggleButton>
                 </StackPanel>
             </ScrollViewer>
-            <ToggleButton x:Name="PanelToggle" Grid.Column="1" IsChecked="True" Click="PanelToggle_Click" AutomationProperties.Name="{x:Bind local:Texts.RightPanel}" ToolTipService.ToolTip="{x:Bind local:Texts.RightPanelTip}"><FontIcon Glyph="&#xE8A0;" /></ToggleButton>
+            <ToggleButton x:Name="SplitToggle" Grid.Column="1" Click="SplitToggle_Click" AutomationProperties.Name="{x:Bind local:Texts.SplitView}" ToolTipService.ToolTip="{x:Bind local:Texts.SplitViewTip}"><FontIcon Glyph="&#xE8B9;" /></ToggleButton>
+            <ToggleButton x:Name="PanelToggle" Grid.Column="2" IsChecked="True" Click="PanelToggle_Click" AutomationProperties.Name="{x:Bind local:Texts.RightPanel}" ToolTipService.ToolTip="{x:Bind local:Texts.RightPanelTip}"><FontIcon Glyph="&#xE8A0;" /></ToggleButton>
         </Grid>
 
         <!-- 開いているファイルのタブ -->
@@ -123,16 +125,24 @@
                 </ScrollViewer>
             </Border>
 
-            <win2d:CanvasControl
-                x:Name="Canvas"
-                Grid.Column="1"
-                ClearColor="#FF2B2B2B"
-                Draw="Canvas_Draw"
-                PointerPressed="Canvas_PointerPressed"
-                PointerMoved="Canvas_PointerMoved"
-                PointerReleased="Canvas_PointerReleased"
-                PointerCaptureLost="Canvas_PointerCaptureLost"
-                PointerWheelChanged="Canvas_PointerWheelChanged" />
+            <!-- キャンバス。分割すると右に資料の画面が出る（MainWindow.Reference.cs。分割するまで作らない。中身はコードで作る） -->
+            <Grid x:Name="CanvasArea" Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition x:Name="RefColumn" Width="0" />
+                </Grid.ColumnDefinitions>
+
+                <win2d:CanvasControl
+                    x:Name="Canvas"
+                    ClearColor="#FF2B2B2B"
+                    Draw="Canvas_Draw"
+                    PointerPressed="Canvas_PointerPressed"
+                    PointerMoved="Canvas_PointerMoved"
+                    PointerReleased="Canvas_PointerReleased"
+                    PointerCaptureLost="Canvas_PointerCaptureLost"
+                    PointerWheelChanged="Canvas_PointerWheelChanged" />
+            </Grid>
 
             <Border
                 x:Name="RightPanel"

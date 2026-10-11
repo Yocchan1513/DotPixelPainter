@@ -37,6 +37,7 @@ It starts in about half a second and needs no installation.
 - Its own `.dotpix` format (keeps layers) and PNG. PSD files can be opened too
 - Tabs, drag and drop, reopening the last tabs at startup
 - Export PNGs scaled up 2 to 16 times with sharp pixels
+- Split view: show a reference (another tab or an image) on the right, and click it to pick colors
 - `.dotpix` thumbnails in Explorer (after registering from the Help menu)
 - Panels can be detached into separate windows. The right panel folds automatically when the window is narrow
 

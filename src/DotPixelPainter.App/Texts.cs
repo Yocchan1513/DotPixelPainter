@@ -163,4 +163,20 @@ internal static class Texts
     public static string ZoomIn => T("拡大", "Zoom in");
 
     public static string ZoomOut => T("縮小", "Zoom out");
+
+    public static string SplitView => T("画面を分割", "Split view");
+
+    public static string SplitViewTip => T("画面を分割して、右に資料（別のタブや画像）を表示する", "Split the view and show a reference (another tab or an image) on the right");
+
+    public static string RefChoose => T("表示するものを選ぶ", "Choose what to show");
+
+    public static string RefSourceTip => T("右に表示するもの（開いているタブ・資料として開いた画像）", "What to show on the right (open tabs or reference images)");
+
+    public static string RefOpenTip => T("資料の画像を開く（タブには加えない）", "Open a reference image (not added as a tab)");
+
+    public static string RefCloseTip => T("分割をやめる", "Close the split view");
+
+    public static string RefCanvasTip => T("ホイールで拡大縮小、ドラッグで移動、クリックで色を拾う、ダブルクリックで全体", "Wheel to zoom, drag to move, click to pick a color, double-click to fit");
+
+    public static string RefSplitterTip => T("左右にドラッグで幅を変える", "Drag left or right to resize");
 }

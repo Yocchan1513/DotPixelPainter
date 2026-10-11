@@ -104,6 +104,7 @@ public sealed partial class MainWindow
         AddToggle(ViewMenu, T("左右反転表示", "Mirror view"), FlipToggle, () => RedrawAll());
         AddToggle(ViewMenu, T("スキンとして編集", "Edit as skin"), SkinToggle, () => SkinToggle_Click(SkinToggle, new RoutedEventArgs()));
         AddToggle(ViewMenu, T("右のパネル", "Right panel"), PanelToggle, () => PanelToggle_Click(PanelToggle, new RoutedEventArgs()));
+        AddToggle(ViewMenu, T("画面を分割（資料を表示）", "Split view (show a reference)"), SplitToggle, () => SetSplit(SplitToggle.IsChecked == true));
         ViewMenu.Items.Add(new MenuFlyoutSeparator());
         _transparencyMenu = CreateTransparencyMenu();
         UpdateTransparencyMenu(_transparencyMenu);

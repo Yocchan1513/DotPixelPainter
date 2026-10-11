@@ -227,6 +227,7 @@ public sealed partial class MainWindow : Window
 
         Tabs.TabItems.Remove(item);
         _tabs.Remove(item);
+        ForgetClosedReference();
         if (_bitmapOwner == tab)
         {
             _bitmap?.Dispose();
@@ -398,6 +399,7 @@ public sealed partial class MainWindow : Window
 
     private void AfterHistoryChange(DocumentTab tab)
     {
+        RefreshReferenceView();
         tab.ImageChanged = true;
         if (tab.ShownSize != (tab.Document.Width, tab.Document.Height))
         {
@@ -912,6 +914,14 @@ public sealed partial class MainWindow : Window
                         SkinToggle_Click(SkinToggle, new RoutedEventArgs());
                     });
                 }
+                else if (_probe.TestOpen == "split")
+                {
+                    ErrorLog.Run("分割（テスト）", async () =>
+                    {
+                        await _startupOpen;
+                        SetSplit(true);
+                    });
+                }
                 else if (_probe.TestOpen == "rotate")
                 {
                     ErrorLog.Run("回転（テスト）", async () =>
@@ -1186,6 +1196,7 @@ public sealed partial class MainWindow : Window
         RefreshHeader(_strokeTab);
         _stroke = null;
         _pixelPath = null;
+        RefreshReferenceView();
         _strokeTab = null;
         UpdateUndoButtons();
     }
