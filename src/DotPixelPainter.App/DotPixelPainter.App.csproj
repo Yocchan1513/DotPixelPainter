@@ -63,4 +63,20 @@
     <Content Include="Assets\DotPixelPainter-192.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!--
+    発行（publish）するときに、エクスプローラー用のサムネイルの部品（DotPixelPainter.Thumbnail.dll）も同じフォルダに出す。
+    Native AOT の DLL なので、アプリと同じ RID で発行する。
+  -->
+  <Target Name="PublishThumbnailProvider" AfterTargets="Publish" Condition="'$(PublishAot)' == 'true'">
+    <PropertyGroup>
+      <_ThumbnailProject>$(MSBuildThisFileDirectory)..\DotPixelPainter.Thumbnail\DotPixelPainter.Thumbnail.csproj</_ThumbnailProject>
+      <_ThumbnailProperties>Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);PublishDir=$(PublishDir)</_ThumbnailProperties>
+      <_ThumbnailRemove>Platform;WindowsAppSDKSelfContained;SelfContained;PublishReadyToRun;PublishTrimmed;PublishAot</_ThumbnailRemove>
+    </PropertyGroup>
+    <!-- 復元（restore）は別の呼び出しで先に済ませる -->
+    <MSBuild Projects="$(_ThumbnailProject)" Targets="Restore" Properties="$(_ThumbnailProperties);_ThumbnailRestore=true" RemoveProperties="$(_ThumbnailRemove)" />
+    <MSBuild Projects="$(_ThumbnailProject)" Targets="Publish" Properties="$(_ThumbnailProperties)" RemoveProperties="$(_ThumbnailRemove)" />
+    <Delete Files="$(PublishDir)DotPixelPainter.Thumbnail.pdb" />
+  </Target>
+
 </Project>

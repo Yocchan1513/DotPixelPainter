@@ -35,13 +35,18 @@ Windows 11 向けの軽量なピクセルアート（ドット絵）エディタ
 ```
 src/DotPixelPainter.Core/   描画の中心（画像・レイヤー・合成・直線など）。UI に依存しない。AOT 対応。
 src/DotPixelPainter.App/    WinUI 3 + Win2D の画面。インストール不要の単体アプリ（unpackaged, self-contained）。
+src/DotPixelPainter.Thumbnail/  エクスプローラーで .dotpix の絵を出すサムネイルの部品（COM の DLL、Native AOT）。
+                            アプリの発行時に同じフォルダへ出る。登録は「.dotpix の関連付け」と一緒（HKCU）。
 tests/DotPixelPainter.Core.Tests/  Core の単体テスト（xUnit）
 tools/measure-startup.ps1   起動時間の計測
+tools/package.ps1           配布用の zip を作る
 ```
 
 - 描画ロジックは Core に置き、テストを書く。App は表示と入力の受け渡しに徹する。
 - 色は `uint` の 0xAARRGGBB（ストレートアルファ）。表示用に乗算済み BGRA へ変換するのは App 側。
 - キャンバスは物理ピクセル単位で整数倍に拡大し、最近傍補間で描く（ドットをにじませない）。
+- サムネイルの部品はエクスプローラー（dllhost）の中で動くので、例外を外に出さない（失敗は HRESULT で返す）。
+  確かめるときは、レジストリに登録せず DLL を直接読み込んで DllGetClassObject → IInitializeWithStream → IThumbnailProvider の順に呼ぶ。
 
 ## 版の上げ方
 

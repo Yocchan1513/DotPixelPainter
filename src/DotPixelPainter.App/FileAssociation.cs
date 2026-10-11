@@ -13,6 +13,15 @@ internal static partial class FileAssociation
     private const string ProgId = "DotPixelPainter.dotpix";
     private const string ClassesRoot = @"Software\Classes";
 
+    /// <summary>サムネイルの部品の番号（DotPixelPainter.Thumbnail の Exports.Clsid と同じ）。</summary>
+    private const string ThumbnailClsid = "{b4c6ee2d-e80b-482e-b254-20cd1ffb67be}";
+
+    /// <summary>Windows で決まっている「サムネイルを出す部品」の番号（IThumbnailProvider）。</summary>
+    private const string ThumbnailHandlerKey = @"ShellEx\{e357fccd-a995-4576-b01f-234630154e96}";
+
+    /// <summary>エクスプローラーで .dotpix の中身の絵を出す部品。発行したアプリと同じフォルダにある。</summary>
+    public static string ThumbnailDllPath => Path.Combine(AppContext.BaseDirectory, "DotPixelPainter.Thumbnail.dll");
+
     public static string ExePath => Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "DotPixelPainter.exe");
 
     /// <summary>今のこの exe に登録されているか。</summary>
@@ -44,12 +53,38 @@ internal static partial class FileAssociation
             openWith.SetValue(ProgId, Array.Empty<byte>(), RegistryValueKind.None);
         }
 
+        RegisterThumbnail();
         NotifyShell();
+    }
+
+    /// <summary>サムネイルの部品があれば、エクスプローラーが .dotpix の中身の絵を出せるように登録する。</summary>
+    private static void RegisterThumbnail()
+    {
+        if (!File.Exists(ThumbnailDllPath))
+        {
+            return; // 開発中のビルドなど、部品がないときは登録しない
+        }
+
+        using (RegistryKey clsid = Registry.CurrentUser.CreateSubKey($@"{ClassesRoot}\CLSID\{ThumbnailClsid}"))
+        {
+            clsid.SetValue(null, "DotPixelPainter Thumbnail Provider");
+            using RegistryKey server = clsid.CreateSubKey("InprocServer32");
+            server.SetValue(null, ThumbnailDllPath);
+            server.SetValue("ThreadingModel", "Both");
+        }
+
+        foreach (string owner in (ReadOnlySpan<string>)[Extension, ProgId])
+        {
+            using RegistryKey handler = Registry.CurrentUser.CreateSubKey($@"{ClassesRoot}\{owner}\{ThumbnailHandlerKey}");
+            handler.SetValue(null, ThumbnailClsid);
+        }
     }
 
     public static void Unregister()
     {
         Registry.CurrentUser.DeleteSubKeyTree($@"{ClassesRoot}\{ProgId}", throwOnMissingSubKey: false);
+        Registry.CurrentUser.DeleteSubKeyTree($@"{ClassesRoot}\CLSID\{ThumbnailClsid}", throwOnMissingSubKey: false);
+        Registry.CurrentUser.DeleteSubKeyTree($@"{ClassesRoot}\{Extension}\{ThumbnailHandlerKey}", throwOnMissingSubKey: false);
         using (RegistryKey? ext = Registry.CurrentUser.OpenSubKey($@"{ClassesRoot}\{Extension}", writable: true))
         {
             if (ext is not null)
