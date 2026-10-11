@@ -14,6 +14,9 @@ public partial class App : Application
         _current = this;
         StartupProbe.Current.Mark("app");
 
+        // 言語は画面を作る前に決める（画面の文字はこれを見て選ばれる）
+        Core.Lang.Japanese = LanguageSetting.UseJapanese();
+
         // GPU デバイスの作成（数十ms）を、画面部品の準備と並行して裏で進める
         Task.Run(static () => Microsoft.Graphics.Canvas.CanvasDevice.GetSharedDevice());
 

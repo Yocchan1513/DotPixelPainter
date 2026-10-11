@@ -46,9 +46,9 @@ public sealed partial class MainWindow
 
         int oldW = tab.Document.Width;
         int oldH = tab.Document.Height;
-        NumberBox widthBox = SizeBox("幅（px）", oldW);
-        NumberBox heightBox = SizeBox("高さ（px）", oldH);
-        var keepRatio = new CheckBox { Content = "縦横の比率を保つ", IsChecked = true };
+        NumberBox widthBox = SizeBox(T("幅（px）", "Width (px)"), oldW);
+        NumberBox heightBox = SizeBox(T("高さ（px）", "Height (px)"), oldH);
+        var keepRatio = new CheckBox { Content = T("縦横の比率を保つ", "Keep aspect ratio"), IsChecked = true };
 
         // 比率を保つときは、片方を変えたらもう片方を合わせる（合わせている間の通知は無視する）
         bool syncing = false;
@@ -94,20 +94,20 @@ public sealed partial class MainWindow
         sizeRow.Children.Add(heightBox);
 
         var panel = new StackPanel { Spacing = 12, MinWidth = 320 };
-        panel.Children.Add(new TextBlock { Text = $"今の大きさ: {oldW} × {oldH}", FontSize = 12 });
+        panel.Children.Add(new TextBlock { Text = T($"今の大きさ: {oldW} × {oldH}", $"Current size: {oldW} × {oldH}"), FontSize = 12 });
         panel.Children.Add(sizeRow);
         panel.Children.Add(keepRatio);
         panel.Children.Add(quick);
         panel.Children.Add(new TextBlock
         {
-            Text = "色を混ぜずに拡大・縮小します（ドットはにじみません）。整数倍の拡大なら、1ドットがそのまま大きな四角になります。",
+            Text = T("色を混ぜずに拡大・縮小します（ドットはにじみません）。整数倍の拡大なら、1ドットがそのまま大きな四角になります。", "Scales without mixing colors, so pixels stay sharp. With whole-number scaling, each pixel becomes a bigger square."),
             FontSize = 12,
             TextWrapping = TextWrapping.Wrap,
             MaxWidth = 320,
             HorizontalAlignment = HorizontalAlignment.Left,
         });
 
-        if (await ShowSizeDialogAsync("画像の大きさを変える", panel, widthBox, heightBox, "変更") is { } size)
+        if (await ShowSizeDialogAsync(T("画像の大きさを変える", "Resize image"), panel, widthBox, heightBox, T("変更", "Change")) is { } size)
         {
             ImageAction(d => d.ScaleImage(size.Width, size.Height));
         }
@@ -124,8 +124,8 @@ public sealed partial class MainWindow
 
         int oldW = tab.Document.Width;
         int oldH = tab.Document.Height;
-        NumberBox widthBox = SizeBox("幅（px）", oldW);
-        NumberBox heightBox = SizeBox("高さ（px）", oldH);
+        NumberBox widthBox = SizeBox(T("幅（px）", "Width (px)"), oldW);
+        NumberBox heightBox = SizeBox(T("高さ（px）", "Height (px)"), oldH);
 
         // 元の絵をどこに寄せるか（3×3 のボタン。初めは真ん中）
         int anchorX = 1;
@@ -172,20 +172,20 @@ public sealed partial class MainWindow
         sizeRow.Children.Add(heightBox);
 
         var panel = new StackPanel { Spacing = 12, MinWidth = 320 };
-        panel.Children.Add(new TextBlock { Text = $"今の大きさ: {oldW} × {oldH}", FontSize = 12 });
+        panel.Children.Add(new TextBlock { Text = T($"今の大きさ: {oldW} × {oldH}", $"Current size: {oldW} × {oldH}"), FontSize = 12 });
         panel.Children.Add(sizeRow);
-        panel.Children.Add(new TextBlock { Text = "今の絵を置く位置", FontSize = 12 });
+        panel.Children.Add(new TextBlock { Text = T("今の絵を置く位置", "Where to place the current image"), FontSize = 12 });
         panel.Children.Add(anchorGrid);
         panel.Children.Add(new TextBlock
         {
-            Text = "絵の大きさは変えずに、周りを透明で広げたり、はみ出す部分を切ったりします。",
+            Text = T("絵の大きさは変えずに、周りを透明で広げたり、はみ出す部分を切ったりします。", "Keeps the image size and adds transparent space around it or cuts off what does not fit."),
             FontSize = 12,
             TextWrapping = TextWrapping.Wrap,
             MaxWidth = 320,
             HorizontalAlignment = HorizontalAlignment.Left,
         });
 
-        if (await ShowSizeDialogAsync("キャンバスの大きさを変える", panel, widthBox, heightBox, "変更") is { } size)
+        if (await ShowSizeDialogAsync(T("キャンバスの大きさを変える", "Resize canvas"), panel, widthBox, heightBox, T("変更", "Change")) is { } size)
         {
             // 寄せる位置: 0 = 左（上）、1 = 真ん中、2 = 右（下）
             int offsetX = (size.Width - oldW) * anchorX / 2;
@@ -203,7 +203,7 @@ public sealed partial class MainWindow
             Title = title,
             Content = content,
             PrimaryButtonText = primary,
-            CloseButtonText = "キャンセル",
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
 
@@ -232,7 +232,7 @@ public sealed partial class MainWindow
         CommitFloating(tab);
         PixelDocument document = tab.Document;
         int maxScale = PixelImage.MaxSize / Math.Max(document.Width, document.Height);
-        var choices = new RadioButtons { Header = "倍率", MaxColumns = 4 };
+        var choices = new RadioButtons { Header = T("倍率", "Scale"), MaxColumns = 4 };
         foreach (int scale in ExportScales.Where(s => s <= Math.Max(1, maxScale)))
         {
             choices.Items.Add($"×{scale}（{document.Width * scale}×{document.Height * scale}）");
@@ -246,7 +246,7 @@ public sealed partial class MainWindow
         panel.Children.Add(choices);
         panel.Children.Add(new TextBlock
         {
-            Text = "表示中のレイヤーを重ねた見た目を、ドットのまま拡大して PNG で書き出します。今開いているファイルはそのままです。",
+            Text = T("表示中のレイヤーを重ねた見た目を、ドットのまま拡大して PNG で書き出します。今開いているファイルはそのままです。", "Exports the visible layers as a PNG, scaled up with sharp pixels. The open file is not changed."),
             FontSize = 12,
             TextWrapping = TextWrapping.Wrap,
             MaxWidth = 320,
@@ -256,10 +256,10 @@ public sealed partial class MainWindow
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = "拡大して書き出し",
+            Title = T("拡大して書き出し", "Export scaled"),
             Content = panel,
-            PrimaryButtonText = "書き出す",
-            CloseButtonText = "キャンセル",
+            PrimaryButtonText = T("書き出す", "Export"),
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary || choices.SelectedIndex < 0)
@@ -273,7 +273,7 @@ public sealed partial class MainWindow
         string baseName = Path.GetFileNameWithoutExtension(document.Name);
         var picker = new FileSavePicker { SuggestedFileName = chosen > 1 ? $"{baseName}@{chosen}x" : baseName };
         InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
-        picker.FileTypeChoices.Add("PNG 画像", [".png"]);
+        picker.FileTypeChoices.Add(T("PNG 画像", "PNG image"), [".png"]);
         StorageFile? file = await picker.PickSaveFileAsync();
         if (file is null)
         {
@@ -286,7 +286,7 @@ public sealed partial class MainWindow
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("書き出せませんでした", ex.Message);
+            await ShowMessageAsync(T("書き出せませんでした", "Could not export"), ex.Message);
         }
     }
 }

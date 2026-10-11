@@ -79,4 +79,9 @@
     <Delete Files="$(PublishDir)DotPixelPainter.Thumbnail.pdb" />
   </Target>
 
+  <ItemGroup>
+    <!-- 画面の文字は T("日本語", "English") で書く（Lang.cs） -->
+    <Using Include="DotPixelPainter.Core.Lang" Static="true" />
+  </ItemGroup>
+
 </Project>

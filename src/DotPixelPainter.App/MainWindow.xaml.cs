@@ -130,7 +130,7 @@ public sealed partial class MainWindow : Window
     private PixelDocument CreateUntitled(int width, int height, bool whiteBackground)
     {
         _untitledCount++;
-        var document = new PixelDocument($"無題 {_untitledCount}", width, height);
+        var document = new PixelDocument(T($"無題 {_untitledCount}", $"Untitled {_untitledCount}"), width, height);
         if (whiteBackground)
         {
             document.ActiveLayer.Image.Fill(0xFFFFFFFF);
@@ -206,11 +206,11 @@ public sealed partial class MainWindow : Window
             var dialog = new ContentDialog
             {
                 XamlRoot = Root.XamlRoot,
-                Title = $"「{tab.Document.Name}」は保存されていません",
-                Content = "閉じる前に保存しますか？",
-                PrimaryButtonText = "保存",
-                SecondaryButtonText = "保存しない",
-                CloseButtonText = "キャンセル",
+                Title = T($"「{tab.Document.Name}」は保存されていません", $"\"{tab.Document.Name}\" has not been saved"),
+                Content = T("閉じる前に保存しますか？", "Do you want to save before closing?"),
+                PrimaryButtonText = T("保存", "Save"),
+                SecondaryButtonText = T("保存しない", "Don't save"),
+                CloseButtonText = T("キャンセル", "Cancel"),
                 DefaultButton = ContentDialogButton.Primary,
             };
             ContentDialogResult result = await dialog.ShowAsync();
@@ -276,10 +276,10 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = "保存されていないタブがあります",
-            Content = "保存せずに終了しますか？",
-            PrimaryButtonText = "終了する",
-            CloseButtonText = "キャンセル",
+            Title = T("保存されていないタブがあります", "Some tabs have not been saved"),
+            Content = T("保存せずに終了しますか？", "Exit without saving?"),
+            PrimaryButtonText = T("終了する", "Exit"),
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
@@ -447,7 +447,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("開けませんでした", ex.Message);
+            await ShowMessageAsync(T("開けませんでした", "Could not open the file"), ex.Message);
         }
     }
 
@@ -470,7 +470,7 @@ public sealed partial class MainWindow : Window
 
         if (warnings.Count > 0)
         {
-            await ShowMessageAsync("読み込みについて", string.Join("\n\n", warnings));
+            await ShowMessageAsync(T("読み込みについて", "About this file"), string.Join("\n\n", warnings));
         }
     }
 
@@ -500,7 +500,7 @@ public sealed partial class MainWindow : Window
             {
                 if (reportErrors)
                 {
-                    await ShowMessageAsync("開けませんでした", $"{path}\n{ex.Message}");
+                    await ShowMessageAsync(T("開けませんでした", "Could not open the file"), $"{path}\n{ex.Message}");
                 }
             }
         }
@@ -585,8 +585,8 @@ public sealed partial class MainWindow : Window
         {
             var picker = new FileSavePicker { SuggestedFileName = Path.GetFileNameWithoutExtension(document.Name) };
             InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
-            picker.FileTypeChoices.Add("DotPixelPainter（レイヤーを残す）", [DotPixFile.Extension]);
-            picker.FileTypeChoices.Add("PNG 画像（1枚にまとめる）", [".png"]);
+            picker.FileTypeChoices.Add(T("DotPixelPainter（レイヤーを残す）", "DotPixelPainter (keeps layers)"), [DotPixFile.Extension]);
+            picker.FileTypeChoices.Add(T("PNG 画像（1枚にまとめる）", "PNG image (flattened)"), [".png"]);
             file = await picker.PickSaveFileAsync();
             if (file is null)
             {
@@ -623,7 +623,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("保存できませんでした", ex.Message);
+            await ShowMessageAsync(T("保存できませんでした", "Could not save"), ex.Message);
             return false;
         }
 
@@ -640,10 +640,10 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = "PNG ではレイヤーが1枚にまとまります",
-            Content = "表示中のレイヤーを重ねた見た目で保存します。レイヤーを残したいときは .dotpix で保存してください。\n（アプリの中のレイヤーはそのまま残ります）",
-            PrimaryButtonText = "PNG で保存",
-            CloseButtonText = "キャンセル",
+            Title = T("PNG ではレイヤーが1枚にまとまります", "PNG flattens the layers"),
+            Content = T("表示中のレイヤーを重ねた見た目で保存します。レイヤーを残したいときは .dotpix で保存してください。\n（アプリの中のレイヤーはそのまま残ります）", "The visible layers are saved as one image. To keep the layers, save as .dotpix.\n(The layers in the app are not changed.)"),
+            PrimaryButtonText = T("PNG で保存", "Save as PNG"),
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
@@ -1283,7 +1283,7 @@ public sealed partial class MainWindow : Window
         ZoomText.Text = $"{tab.Zoom * 100}%";
         string pos = position is { } p && tab.Document.ActiveLayer.Image.Contains(p.X, p.Y) ? $"{p.X}, {p.Y}" : "-";
         string skin = IsSkinTab(tab) && SkinStatus() is { Length: > 0 } part ? $"　｜　{part}" : "";
-        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{PatternStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}";
+        StatusText.Text = T($"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{PatternStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}", $"{tab.Document.Width} × {tab.Document.Height}   |   Zoom {tab.Zoom * 100}%   |   Position {pos}{skin}   |   {ToolStatus()}{PatternStatus()}{MaskStatus()}   |   {tab.Document.ActiveLayer.Name}");
     }
 
     private static Color ToColor(uint argb) =>

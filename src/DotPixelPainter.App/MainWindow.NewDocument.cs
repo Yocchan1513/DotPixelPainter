@@ -14,8 +14,8 @@ public sealed partial class MainWindow
     {
         NewDocumentSettings last = NewDocumentSettings.Load();
 
-        var widthBox = SizeBox("幅（px）", last.Width);
-        var heightBox = SizeBox("高さ（px）", last.Height);
+        var widthBox = SizeBox(T("幅（px）", "Width (px)"), last.Width);
+        var heightBox = SizeBox(T("高さ（px）", "Height (px)"), last.Height);
 
         var swap = new Button
         {
@@ -23,7 +23,7 @@ public sealed partial class MainWindow
             VerticalAlignment = VerticalAlignment.Bottom,
             Padding = new Thickness(8),
         };
-        ToolTipService.SetToolTip(swap, "幅と高さを入れ替え");
+        ToolTipService.SetToolTip(swap, T("幅と高さを入れ替え", "Swap width and height"));
         swap.Click += (_, _) => (widthBox.Value, heightBox.Value) = (heightBox.Value, widthBox.Value);
 
         var sizeRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -56,7 +56,7 @@ public sealed partial class MainWindow
         }
 
         var skinRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        foreach ((string label, bool slim) in new[] { ("Minecraft スキン（クラシック）", false), ("スリム", true) })
+        foreach ((string label, bool slim) in new[] { (T("Minecraft スキン（クラシック）", "Minecraft skin (classic)"), false), (T("スリム", "Slim"), true) })
         {
             var button = new Button { Content = label };
             button.Click += (_, _) =>
@@ -64,22 +64,24 @@ public sealed partial class MainWindow
                 widthBox.Value = 64;
                 heightBox.Value = 64;
                 skinSlim = slim;
-                skinNote.Text = $"64×64 のスキンとして作ります（腕: {(slim ? "スリム 3px" : "クラシック 4px")}）";
+                skinNote.Text = slim
+                    ? T("64×64 のスキンとして作ります（腕: スリム 3px）", "Creates a 64×64 skin (arms: slim 3px)")
+                    : T("64×64 のスキンとして作ります（腕: クラシック 4px）", "Creates a 64×64 skin (arms: classic 4px)");
                 skinNote.Visibility = Visibility.Visible;
             };
             skinRow.Children.Add(button);
         }
 
-        var background = new RadioButtons { Header = "背景", MaxColumns = 2 };
-        background.Items.Add("透明");
-        background.Items.Add("白");
+        var background = new RadioButtons { Header = T("背景", "Background"), MaxColumns = 2 };
+        background.Items.Add(T("透明", "Transparent"));
+        background.Items.Add(T("白", "White"));
         background.SelectedIndex = last.WhiteBackground ? 1 : 0;
 
         var panel = new StackPanel { Spacing = 12, MinWidth = 340 };
         panel.Children.Add(sizeRow);
         panel.Children.Add(new TextBlock
         {
-            Text = $"よく使うサイズ（最大 {PixelImage.MaxSize}×{PixelImage.MaxSize}）",
+            Text = T($"よく使うサイズ（最大 {PixelImage.MaxSize}×{PixelImage.MaxSize}）", $"Common sizes (up to {PixelImage.MaxSize}×{PixelImage.MaxSize})"),
             // 注意: Resources["CaptionTextBlockStyle"] を (Style) に変換すると Native AOT では InvalidCastException になる
             FontSize = 12,
         });
@@ -91,10 +93,10 @@ public sealed partial class MainWindow
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = "新規作成",
+            Title = T("新規作成", "New"),
             Content = panel,
-            PrimaryButtonText = "作成",
-            CloseButtonText = "キャンセル",
+            PrimaryButtonText = T("作成", "Create"),
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
 

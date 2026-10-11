@@ -126,7 +126,7 @@ public sealed partial class MainWindow
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("貼り付けられませんでした", ex.Message);
+            await ShowMessageAsync(T("貼り付けられませんでした", "Could not paste"), ex.Message);
             return;
         }
 
@@ -183,18 +183,18 @@ public sealed partial class MainWindow
         if (_selectionMenu is null)
         {
             _selectionMenu = new MenuFlyout();
-            AddMenuItem("切り取り", "Ctrl+X", () => ErrorLog.Run("切り取り", () => CopyAsync(cut: true)));
-            AddMenuItem("コピー", "Ctrl+C", () => ErrorLog.Run("コピー", () => CopyAsync(cut: false)));
-            AddMenuItem("貼り付け", "Ctrl+V", () => ErrorLog.Run("貼り付け", PasteAsync));
-            AddMenuItem("消去", "Delete", () => DeleteSelection());
+            AddMenuItem(T("切り取り", "Cut"), "Ctrl+X", () => ErrorLog.Run("切り取り", () => CopyAsync(cut: true)));
+            AddMenuItem(T("コピー", "Copy"), "Ctrl+C", () => ErrorLog.Run("コピー", () => CopyAsync(cut: false)));
+            AddMenuItem(T("貼り付け", "Paste"), "Ctrl+V", () => ErrorLog.Run("貼り付け", PasteAsync));
+            AddMenuItem(T("消去", "Delete"), "Delete", () => DeleteSelection());
             _selectionMenu.Items.Add(new MenuFlyoutSeparator());
-            AddMenuItem("左右反転", "Shift+H", FlipSelectionHorizontal);
-            AddMenuItem("上下反転", "Shift+V", FlipSelectionVertical);
-            AddMenuItem("右に90°回転", "Shift+R", () => RotateSelection(clockwise: true));
-            AddMenuItem("左に90°回転", "Shift+L", () => RotateSelection(clockwise: false));
+            AddMenuItem(T("左右反転", "Flip horizontal"), "Shift+H", FlipSelectionHorizontal);
+            AddMenuItem(T("上下反転", "Flip vertical"), "Shift+V", FlipSelectionVertical);
+            AddMenuItem(T("右に90°回転", "Rotate 90° right"), "Shift+R", () => RotateSelection(clockwise: true));
+            AddMenuItem(T("左に90°回転", "Rotate 90° left"), "Shift+L", () => RotateSelection(clockwise: false));
             _selectionMenu.Items.Add(new MenuFlyoutSeparator());
-            AddMenuItem("すべて選択", "Ctrl+A", SelectAll);
-            AddMenuItem("選択を解除", "Ctrl+D", Deselect);
+            AddMenuItem(T("すべて選択", "Select all"), "Ctrl+A", SelectAll);
+            AddMenuItem(T("選択を解除", "Deselect"), "Ctrl+D", Deselect);
         }
 
         _selectionMenu.ShowAt(Canvas, new FlyoutShowOptions { Position = position });

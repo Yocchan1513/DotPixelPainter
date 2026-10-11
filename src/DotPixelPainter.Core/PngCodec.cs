@@ -85,7 +85,7 @@ public static class PngCodec
     {
         if (data.Length < 8 || !data[..8].SequenceEqual(Signature))
         {
-            throw new FormatException("PNG ではありません。");
+            throw new FormatException(T("PNG ではありません。", "This is not a PNG."));
         }
 
         int width = 0;
@@ -99,7 +99,7 @@ public static class PngCodec
             string type = System.Text.Encoding.ASCII.GetString(data.Slice(pos + 4, 4));
             if (length < 0 || pos + 12 + length > data.Length)
             {
-                throw new FormatException("PNG が壊れています。");
+                throw new FormatException(T("PNG が壊れています。", "The PNG is damaged."));
             }
 
             ReadOnlySpan<byte> body = data.Slice(pos + 8, length);
@@ -110,7 +110,7 @@ public static class PngCodec
                     height = BinaryPrimitives.ReadInt32BigEndian(body[4..]);
                     if (body[8] != 8 || body[12] != 0)
                     {
-                        throw new FormatException("8bit・インターレースなしの PNG だけに対応しています。");
+                        throw new FormatException(T("8bit・インターレースなしの PNG だけに対応しています。", "Only 8-bit, non-interlaced PNGs are supported."));
                     }
 
                     colorType = body[9];
@@ -133,7 +133,7 @@ public static class PngCodec
             2 => 3,
             4 => 2,
             0 => 1,
-            _ => throw new FormatException("この色の形式の PNG には対応していません。"),
+            _ => throw new FormatException(T("この色の形式の PNG には対応していません。", "This PNG color type is not supported.")),
         };
 
         var image = new PixelImage(width, height);
@@ -163,7 +163,7 @@ public static class PngCodec
                     2 => b,
                     3 => (a + b) / 2,
                     4 => Paeth(a, b, c),
-                    _ => throw new FormatException("PNG が壊れています（不明なフィルター）。"),
+                    _ => throw new FormatException(T("PNG が壊れています（不明なフィルター）。", "The PNG is damaged (unknown filter).")),
                 };
                 line[i] = (byte)(raw[o + 1 + i] + predictor);
             }

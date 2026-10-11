@@ -31,7 +31,7 @@ public sealed partial class MainWindow
             .Take(MaxListedColors).Select(c => c.Color).ToList();
         if (used.Count == 0)
         {
-            await ShowMessageAsync("色の置き換え", area is null ? "絵に色がありません（すべて透明です）。" : "選択範囲の中に色がありません。");
+            await ShowMessageAsync(T("色の置き換え", "Replace color"), area is null ? T("絵に色がありません（すべて透明です）。", "The image has no colors (everything is transparent).") : T("選択範囲の中に色がありません。", "There are no colors inside the selection."));
             return;
         }
 
@@ -41,16 +41,16 @@ public sealed partial class MainWindow
         targets.AddRange(_palette.Colors.Where(c => !targets.Contains(c)));
         var (toPanel, getTo) = SwatchPicker(targets, _color);
 
-        var allLayers = new CheckBox { Content = "すべてのレイヤー（オフなら今のレイヤーだけ）" };
+        var allLayers = new CheckBox { Content = T("すべてのレイヤー（オフなら今のレイヤーだけ）", "All layers (off: current layer only)") };
 
         var panel = new StackPanel { Spacing = 8, MinWidth = 340 };
-        panel.Children.Add(Caption(area is null ? "置き換える色（絵の中で使っている色）" : "置き換える色（選択範囲の中で使っている色）"));
+        panel.Children.Add(Caption(area is null ? T("置き換える色（絵の中で使っている色）", "Color to replace (colors used in the image)") : T("置き換える色（選択範囲の中で使っている色）", "Color to replace (colors used in the selection)")));
         panel.Children.Add(fromPanel);
-        panel.Children.Add(Caption("新しい色（描画色・背景色・パレット）"));
+        panel.Children.Add(Caption(T("新しい色（描画色・背景色・パレット）", "New color (foreground, background, palette)")));
         panel.Children.Add(toPanel);
         panel.Children.Add(allLayers);
 
-        if (!await ConfirmDialogAsync("色の置き換え", panel, "置き換える"))
+        if (!await ConfirmDialogAsync(T("色の置き換え", "Replace color"), panel, T("置き換える", "Replace")))
         {
             return;
         }
@@ -75,13 +75,13 @@ public sealed partial class MainWindow
         PixelRect? area = tab.Selection;
 
         var mode = new RadioButtons();
-        mode.Items.Add("色数を決めて減らす（代表の色は自動で選ぶ）");
-        mode.Items.Add("今のパレットの色に合わせる");
+        mode.Items.Add(T("色数を決めて減らす（代表の色は自動で選ぶ）", "Reduce to a number of colors (picked automatically)"));
+        mode.Items.Add(T("今のパレットの色に合わせる", "Match the current palette"));
         mode.SelectedIndex = 0;
 
         var countBox = new NumberBox
         {
-            Header = "色数",
+            Header = T("色数", "Colors"),
             Value = ViewSettings.GetDouble("reduce-colors") ?? 16,
             Minimum = 2,
             Maximum = 256,
@@ -92,8 +92,8 @@ public sealed partial class MainWindow
             SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
             ValidationMode = NumberBoxValidationMode.InvalidInputOverwritten,
         };
-        var toPalette = new CheckBox { Content = "減らした色をパレットにする（今のパレットは置き換わる）" };
-        var allLayers = new CheckBox { Content = "すべてのレイヤー（オフなら今のレイヤーだけ）" };
+        var toPalette = new CheckBox { Content = T("減らした色をパレットにする（今のパレットは置き換わる）", "Use the reduced colors as the palette (replaces the current palette)") };
+        var allLayers = new CheckBox { Content = T("すべてのレイヤー（オフなら今のレイヤーだけ）", "All layers (off: current layer only)") };
         mode.SelectionChanged += (_, _) =>
         {
             bool byCount = mode.SelectedIndex == 0;
@@ -103,14 +103,15 @@ public sealed partial class MainWindow
 
         int usedCount = ColorTools.CountColors(document.Layers.Select(l => l.Image), area).Count;
         var panel = new StackPanel { Spacing = 10, MinWidth = 340 };
-        panel.Children.Add(Caption($"今使っている色: {usedCount} 色{(area is null ? "" : "（選択範囲の中）")}"));
+        string inSelection = area is null ? "" : T("（選択範囲の中）", " (in the selection)");
+        panel.Children.Add(Caption(T($"今使っている色: {usedCount} 色{inSelection}", $"Colors in use: {usedCount}{inSelection}")));
         panel.Children.Add(mode);
         panel.Children.Add(countBox);
         panel.Children.Add(toPalette);
         panel.Children.Add(allLayers);
-        panel.Children.Add(Caption("それぞれの画素を、いちばん近い色に置き換えます。不透明度はそのままです。"));
+        panel.Children.Add(Caption(T("それぞれの画素を、いちばん近い色に置き換えます。不透明度はそのままです。", "Each pixel is replaced with the closest color. Opacity is kept.")));
 
-        if (!await ConfirmDialogAsync("減色", panel, "減らす"))
+        if (!await ConfirmDialogAsync(T("減色", "Reduce colors"), panel, T("減らす", "Reduce")))
         {
             return;
         }
@@ -150,7 +151,7 @@ public sealed partial class MainWindow
             .Select(c => c.Color).Take(Palette.MaxColors).ToList();
         if (used.Count == 0)
         {
-            await ShowMessageAsync("パレットに取り込む", "絵に色がありません（すべて透明です）。");
+            await ShowMessageAsync(T("パレットに取り込む", "Add to palette"), T("絵に色がありません（すべて透明です）。", "The image has no colors (everything is transparent)."));
             return;
         }
 
@@ -158,17 +159,21 @@ public sealed partial class MainWindow
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = "使っている色をパレットに取り込む",
+            Title = T("使っている色をパレットに取り込む", "Add used colors to the palette"),
             Content = new TextBlock
             {
-                Text = $"{(area is null ? "絵" : "選択範囲")}で使っている {used.Count} 色（多い順）を取り込みます。\n" +
-                       $"「追加」はパレットにない {newColors} 色を後ろに足し、「置き換え」はパレットをこの色だけにします。\n" +
-                       $"（パレットは {Palette.MaxColors} 色まで）",
+                Text = T(
+                    $"{(area is null ? "絵" : "選択範囲")}で使っている {used.Count} 色（多い順）を取り込みます。\n" +
+                    $"「追加」はパレットにない {newColors} 色を後ろに足し、「置き換え」はパレットをこの色だけにします。\n" +
+                    $"（パレットは {Palette.MaxColors} 色まで）",
+                    $"Adds the {used.Count} colors used in the {(area is null ? "image" : "selection")} (most used first).\n" +
+                    $"\"Add\" appends the {newColors} colors not yet in the palette; \"Replace\" makes the palette only these colors.\n" +
+                    $"(A palette holds up to {Palette.MaxColors} colors.)"),
                 TextWrapping = TextWrapping.Wrap,
             },
-            PrimaryButtonText = "追加",
-            SecondaryButtonText = "置き換え",
-            CloseButtonText = "キャンセル",
+            PrimaryButtonText = T("追加", "Add"),
+            SecondaryButtonText = T("置き換え", "Replace"),
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
 
@@ -270,7 +275,7 @@ public sealed partial class MainWindow
             Title = title,
             Content = content,
             PrimaryButtonText = primary,
-            CloseButtonText = "キャンセル",
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         return await dialog.ShowAsync() == ContentDialogResult.Primary;

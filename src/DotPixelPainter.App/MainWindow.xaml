@@ -30,13 +30,13 @@
             <MenuBar.Resources>
                 <Thickness x:Key="MenuBarItemMargin">0,2,0,2</Thickness>
             </MenuBar.Resources>
-            <MenuBarItem x:Name="FileMenu" Title="ファイル(F)" AccessKey="F" />
-            <MenuBarItem x:Name="EditMenu" Title="編集(E)" AccessKey="E" />
-            <MenuBarItem x:Name="ImageMenu" Title="画像(I)" AccessKey="I" />
-            <MenuBarItem x:Name="SelectMenu" Title="選択範囲(S)" AccessKey="S" />
-            <MenuBarItem x:Name="LayerMenu" Title="レイヤー(L)" AccessKey="L" />
-            <MenuBarItem x:Name="ViewMenu" Title="表示(V)" AccessKey="V" />
-            <MenuBarItem x:Name="HelpMenu" Title="ヘルプ(H)" AccessKey="H" />
+            <MenuBarItem x:Name="FileMenu" Title="{x:Bind local:Texts.MenuFile}" AccessKey="F" />
+            <MenuBarItem x:Name="EditMenu" Title="{x:Bind local:Texts.MenuEdit}" AccessKey="E" />
+            <MenuBarItem x:Name="ImageMenu" Title="{x:Bind local:Texts.MenuImage}" AccessKey="I" />
+            <MenuBarItem x:Name="SelectMenu" Title="{x:Bind local:Texts.MenuSelect}" AccessKey="S" />
+            <MenuBarItem x:Name="LayerMenu" Title="{x:Bind local:Texts.MenuLayer}" AccessKey="L" />
+            <MenuBarItem x:Name="ViewMenu" Title="{x:Bind local:Texts.MenuView}" AccessKey="V" />
+            <MenuBarItem x:Name="HelpMenu" Title="{x:Bind local:Texts.MenuHelp}" AccessKey="H" />
         </MenuBar>
 
         <!-- ツールバー（アイコン。何のボタンかはマウスを乗せると出る） -->
@@ -65,25 +65,25 @@
             <!-- 窓が狭いときは横にスクロールできる（右のパネルのボタンは右端に固定して隠れないようにする） -->
             <ScrollViewer HorizontalScrollBarVisibility="Hidden" HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
                 <StackPanel Orientation="Horizontal" Spacing="4">
-                    <Button Click="New_Click" AutomationProperties.Name="新規" ToolTipService.ToolTip="新規 (Ctrl+N)"><FontIcon Glyph="&#xE8A5;" /></Button>
-                    <Button Click="Open_Click" AutomationProperties.Name="開く" ToolTipService.ToolTip="開く (Ctrl+O)"><FontIcon Glyph="&#xE8E5;" /></Button>
-                    <Button Click="Save_Click" AutomationProperties.Name="保存" ToolTipService.ToolTip="上書き保存 (Ctrl+S)"><FontIcon Glyph="&#xE74E;" /></Button>
-                    <Button Click="SaveAs_Click" AutomationProperties.Name="別名で保存" ToolTipService.ToolTip="別名で保存：.dotpix（レイヤーを残す）か PNG（1枚にまとめる） (Ctrl+Shift+S)"><FontIcon Glyph="&#xE792;" /></Button>
+                    <Button Click="New_Click" AutomationProperties.Name="{x:Bind local:Texts.New}" ToolTipService.ToolTip="{x:Bind local:Texts.NewTip}"><FontIcon Glyph="&#xE8A5;" /></Button>
+                    <Button Click="Open_Click" AutomationProperties.Name="{x:Bind local:Texts.Open}" ToolTipService.ToolTip="{x:Bind local:Texts.OpenTip}"><FontIcon Glyph="&#xE8E5;" /></Button>
+                    <Button Click="Save_Click" AutomationProperties.Name="{x:Bind local:Texts.Save}" ToolTipService.ToolTip="{x:Bind local:Texts.SaveTip}"><FontIcon Glyph="&#xE74E;" /></Button>
+                    <Button Click="SaveAs_Click" AutomationProperties.Name="{x:Bind local:Texts.SaveAs}" ToolTipService.ToolTip="{x:Bind local:Texts.SaveAsTip}"><FontIcon Glyph="&#xE792;" /></Button>
                     <AppBarSeparator />
-                    <Button x:Name="UndoButton" Click="Undo_Click" IsEnabled="False" AutomationProperties.Name="元に戻す" ToolTipService.ToolTip="元に戻す (Ctrl+Z)"><FontIcon Glyph="&#xE7A7;" /></Button>
-                    <Button x:Name="RedoButton" Click="Redo_Click" IsEnabled="False" AutomationProperties.Name="やり直し" ToolTipService.ToolTip="やり直し (Ctrl+Y / Ctrl+Shift+Z)"><FontIcon Glyph="&#xE7A6;" /></Button>
+                    <Button x:Name="UndoButton" Click="Undo_Click" IsEnabled="False" AutomationProperties.Name="{x:Bind local:Texts.Undo}" ToolTipService.ToolTip="{x:Bind local:Texts.UndoTip}"><FontIcon Glyph="&#xE7A7;" /></Button>
+                    <Button x:Name="RedoButton" Click="Redo_Click" IsEnabled="False" AutomationProperties.Name="{x:Bind local:Texts.Redo}" ToolTipService.ToolTip="{x:Bind local:Texts.RedoTip}"><FontIcon Glyph="&#xE7A6;" /></Button>
                     <AppBarSeparator />
-                    <Button Click="ZoomOut_Click" AutomationProperties.Name="縮小" ToolTipService.ToolTip="縮小"><FontIcon Glyph="&#xE71F;" /></Button>
+                    <Button Click="ZoomOut_Click" AutomationProperties.Name="{x:Bind local:Texts.ZoomOut}" ToolTipService.ToolTip="{x:Bind local:Texts.ZoomOut}"><FontIcon Glyph="&#xE71F;" /></Button>
                     <TextBlock x:Name="ZoomText" MinWidth="56" VerticalAlignment="Center" TextAlignment="Center" Text="800%" />
-                    <Button Click="ZoomIn_Click" AutomationProperties.Name="拡大" ToolTipService.ToolTip="拡大"><FontIcon Glyph="&#xE8A3;" /></Button>
+                    <Button Click="ZoomIn_Click" AutomationProperties.Name="{x:Bind local:Texts.ZoomIn}" ToolTipService.ToolTip="{x:Bind local:Texts.ZoomIn}"><FontIcon Glyph="&#xE8A3;" /></Button>
                     <AppBarSeparator />
-                    <ToggleButton x:Name="GridToggle" IsChecked="True" Click="ViewOption_Click" AutomationProperties.Name="グリッド" ToolTipService.ToolTip="1pxグリッド線（4倍以上で表示）"><FontIcon Glyph="&#xF0E2;" /></ToggleButton>
-                    <ToggleButton x:Name="FlipToggle" Click="ViewOption_Click" AutomationProperties.Name="左右反転表示" ToolTipService.ToolTip="表示だけを左右反転（絵は変わらない）"><FontIcon Glyph="&#xE8AB;" /></ToggleButton>
+                    <ToggleButton x:Name="GridToggle" IsChecked="True" Click="ViewOption_Click" AutomationProperties.Name="{x:Bind local:Texts.Grid}" ToolTipService.ToolTip="{x:Bind local:Texts.GridTip}"><FontIcon Glyph="&#xF0E2;" /></ToggleButton>
+                    <ToggleButton x:Name="FlipToggle" Click="ViewOption_Click" AutomationProperties.Name="{x:Bind local:Texts.MirrorView}" ToolTipService.ToolTip="{x:Bind local:Texts.MirrorViewTip}"><FontIcon Glyph="&#xE8AB;" /></ToggleButton>
                     <AppBarSeparator />
-                    <ToggleButton x:Name="SkinToggle" Click="SkinToggle_Click" AutomationProperties.Name="スキン" ToolTipService.ToolTip="Minecraft スキンとして扱う（64×64・64×32 のとき）"><FontIcon Glyph="&#xE77B;" /></ToggleButton>
+                    <ToggleButton x:Name="SkinToggle" Click="SkinToggle_Click" AutomationProperties.Name="{x:Bind local:Texts.Skin}" ToolTipService.ToolTip="{x:Bind local:Texts.SkinTip}"><FontIcon Glyph="&#xE77B;" /></ToggleButton>
                 </StackPanel>
             </ScrollViewer>
-            <ToggleButton x:Name="PanelToggle" Grid.Column="1" IsChecked="True" Click="PanelToggle_Click" AutomationProperties.Name="右のパネル" ToolTipService.ToolTip="右のパネルを表示する（ウィンドウが狭いときは自動でたたむ）"><FontIcon Glyph="&#xE8A0;" /></ToggleButton>
+            <ToggleButton x:Name="PanelToggle" Grid.Column="1" IsChecked="True" Click="PanelToggle_Click" AutomationProperties.Name="{x:Bind local:Texts.RightPanel}" ToolTipService.ToolTip="{x:Bind local:Texts.RightPanelTip}"><FontIcon Glyph="&#xE8A0;" /></ToggleButton>
         </Grid>
 
         <!-- 開いているファイルのタブ -->
@@ -152,12 +152,12 @@
                     <Border x:Name="PreviewSlot">
                     <StackPanel x:Name="PreviewSection" Spacing="8">
                         <Grid>
-                            <TextBlock x:Name="PreviewTitle" Text="プレビュー" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock x:Name="PreviewTitle" Text="{x:Bind local:Texts.Preview}" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
-                                <ToggleButton x:Name="TileToggle" Padding="6,4" Click="TileToggle_Click" ToolTipService.ToolTip="タイル表示（3×3 に並べて継ぎ目を確かめる）">
+                                <ToggleButton x:Name="TileToggle" Padding="6,4" Click="TileToggle_Click" ToolTipService.ToolTip="{x:Bind local:Texts.TileTip}">
                                     <FontIcon Glyph="&#xE80A;" FontSize="12" />
                                 </ToggleButton>
-                                <Button Padding="6,4" Click="PreviewBackground_Click" ToolTipService.ToolTip="プレビューの背景（市松模様・白・黒・灰色・背景色）">
+                                <Button Padding="6,4" Click="PreviewBackground_Click" ToolTipService.ToolTip="{x:Bind local:Texts.PreviewBackgroundTip}">
                                     <FontIcon Glyph="&#xE790;" FontSize="12" />
                                 </Button>
                                 <Button x:Name="PreviewDetachButton" Tag="preview" Padding="6,4" Click="PanelDetach_Click">
@@ -183,13 +183,13 @@
                             PointerReleased="PreviewGrip_PointerReleased"
                             PointerCaptureLost="PreviewGrip_PointerCaptureLost"
                             DoubleTapped="PreviewGrip_DoubleTapped"
-                            ToolTipService.ToolTip="上下にドラッグで高さを変える（ダブルクリックで元に戻す）">
+                            ToolTipService.ToolTip="{x:Bind local:Texts.PreviewGripTip}">
                             <Rectangle Width="36" Height="3" RadiusX="1.5" RadiusY="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="{ThemeResource ControlStrongFillColorDefaultBrush}" />
                         </local:ResizeGrip>
                         <!-- スキンモードのときだけ出す -->
                         <StackPanel x:Name="SkinOptions" Orientation="Horizontal" Spacing="4" Visibility="Collapsed">
-                            <ToggleButton x:Name="SlimToggle" Content="スリム腕" Click="SkinOption_Click" ToolTipService.ToolTip="腕の太さ: オンでスリム（3px）、オフでクラシック（4px）" />
-                            <ToggleButton x:Name="OuterToggle" Content="外側" IsChecked="True" Click="SkinOption_Click" ToolTipService.ToolTip="外側のレイヤー（帽子・上着・袖・ズボン）を表示" />
+                            <ToggleButton x:Name="SlimToggle" Content="{x:Bind local:Texts.SlimArms}" Click="SkinOption_Click" ToolTipService.ToolTip="{x:Bind local:Texts.SlimArmsTip}" />
+                            <ToggleButton x:Name="OuterToggle" Content="{x:Bind local:Texts.Outer}" IsChecked="True" Click="SkinOption_Click" ToolTipService.ToolTip="{x:Bind local:Texts.OuterTip}" />
                         </StackPanel>
                     </StackPanel>
                     </Border>
@@ -197,7 +197,7 @@
                     <Border x:Name="ColorSlot">
                     <StackPanel x:Name="ColorSection" Spacing="8">
                     <Grid>
-                        <TextBlock Text="カラー" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="{x:Bind local:Texts.Color}" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <Button x:Name="ColorDetachButton" Tag="color" HorizontalAlignment="Right" Padding="6,4" Click="PanelDetach_Click">
                             <FontIcon Glyph="&#xE8A7;" FontSize="12" />
                         </Button>
@@ -220,7 +220,7 @@
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Tapped="BackColor_Tapped"
-                                ToolTipService.ToolTip="背景色（クリックで描画色と入れ替え X / 白黒に戻す D）" />
+                                ToolTipService.ToolTip="{x:Bind local:Texts.BackColorTip}" />
                             <Border
                                 x:Name="ForeColorSwatch"
                                 Width="34"
@@ -231,7 +231,7 @@
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Tapped="ForeColor_Tapped"
-                                ToolTipService.ToolTip="描画色（クリックでカラーピッカー）" />
+                                ToolTipService.ToolTip="{x:Bind local:Texts.ForeColorTip}" />
                         </Grid>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
                             <TextBox
@@ -240,13 +240,13 @@
                                 MaxLength="9"
                                 KeyDown="ColorHexBox_KeyDown"
                                 LostFocus="ColorHexBox_LostFocus"
-                                ToolTipService.ToolTip="色コード（RRGGBB または AARRGGBB）。Enter で反映" />
+                                ToolTipService.ToolTip="{x:Bind local:Texts.HexTip}" />
                             <ToggleButton
                                 x:Name="HsvToggle"
                                 Content="HSV"
                                 Padding="10,2"
                                 Click="ColorMode_Click"
-                                ToolTipService.ToolTip="スライダーを RGB と HSV で切り替え" />
+                                ToolTipService.ToolTip="{x:Bind local:Texts.ColorModeTip}" />
                         </StackPanel>
                     </Grid>
 
@@ -263,10 +263,10 @@
 
                     <!-- ブラシ -->
                     <Grid Margin="0,4,0,0">
-                        <TextBlock x:Name="BrushSizeText" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" Text="ブラシ 1px" />
+                        <TextBlock x:Name="BrushSizeText" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" Text="{x:Bind local:Texts.Brush1px}" />
                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
-                            <ToggleButton x:Name="SquareBrushToggle" Content="□" Padding="8,2" IsChecked="True" Click="BrushShape_Click" ToolTipService.ToolTip="四角いペン先" />
-                            <ToggleButton x:Name="RoundBrushToggle" Content="○" Padding="8,2" Click="BrushShape_Click" ToolTipService.ToolTip="丸いペン先" />
+                            <ToggleButton x:Name="SquareBrushToggle" Content="□" Padding="8,2" IsChecked="True" Click="BrushShape_Click" ToolTipService.ToolTip="{x:Bind local:Texts.SquareTipTip}" />
+                            <ToggleButton x:Name="RoundBrushToggle" Content="○" Padding="8,2" Click="BrushShape_Click" ToolTipService.ToolTip="{x:Bind local:Texts.RoundTipTip}" />
                         </StackPanel>
                     </Grid>
                     <Slider
@@ -276,35 +276,35 @@
                         StepFrequency="1"
                         Value="1"
                         ValueChanged="BrushSizeSlider_ValueChanged"
-                        ToolTipService.ToolTip="ペン先の大きさ（[ と ] でも変えられる）" />
+                        ToolTipService.ToolTip="{x:Bind local:Texts.BrushSizeTip}" />
                     <CheckBox
                         x:Name="PixelPerfectBox"
-                        Content="1pxの線の角を整える"
+                        Content="{x:Bind local:Texts.PixelPerfect}"
                         Click="PixelPerfect_Click"
-                        ToolTipService.ToolTip="ピクセルパーフェクト: 1pxの自由線で、角にできる余分な1ドット（L字の真ん中）を描きながら消す" />
+                        ToolTipService.ToolTip="{x:Bind local:Texts.PixelPerfectTip}" />
 
                     <!-- ディザ（網かけ）のパターン塗り。選択肢は最初の描画のあとで足す（MainWindow.Pattern.cs） -->
                     <Grid Margin="0,4,0,0">
-                        <TextBlock Text="パターン" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <ComboBox x:Name="PatternBox" HorizontalAlignment="Right" MinWidth="110" SelectedIndex="0" SelectionChanged="Pattern_SelectionChanged" ToolTipService.ToolTip="ペン・図形・塗りつぶしを網かけの模様で塗る">
-                            <ComboBoxItem Content="なし" />
+                        <TextBlock Text="{x:Bind local:Texts.Pattern}" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox x:Name="PatternBox" HorizontalAlignment="Right" MinWidth="110" SelectedIndex="0" SelectionChanged="Pattern_SelectionChanged" ToolTipService.ToolTip="{x:Bind local:Texts.PatternTip}">
+                            <ComboBoxItem Content="{x:Bind local:Texts.None}" />
                         </ComboBox>
                     </Grid>
-                    <CheckBox x:Name="PatternGapBox" Content="すき間を背景色で塗る" Visibility="Collapsed" Click="PatternGap_Click" />
+                    <CheckBox x:Name="PatternGapBox" Content="{x:Bind local:Texts.PatternGap}" Visibility="Collapsed" Click="PatternGap_Click" />
 
                     <!-- カラーマスク（AzPainter2 のマスク／逆マスクにあたる） -->
                     <Grid Margin="0,4,0,0">
-                        <TextBlock Text="カラーマスク" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="{x:Bind local:Texts.ColorMask}" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <ComboBox x:Name="MaskModeBox" HorizontalAlignment="Right" MinWidth="110" SelectedIndex="0" SelectionChanged="MaskMode_SelectionChanged">
-                            <ComboBoxItem Content="オフ" />
-                            <ComboBoxItem Content="指定色を保護" />
-                            <ComboBoxItem Content="指定色だけ" />
+                            <ComboBoxItem Content="{x:Bind local:Texts.Off}" />
+                            <ComboBoxItem Content="{x:Bind local:Texts.MaskProtect}" />
+                            <ComboBoxItem Content="{x:Bind local:Texts.MaskOnly}" />
                         </ComboBox>
                     </Grid>
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <StackPanel x:Name="MaskSwatches" Orientation="Horizontal" Spacing="3" VerticalAlignment="Center" />
-                        <Button Content="＋" Padding="8,2" Click="MaskAdd_Click" ToolTipService.ToolTip="描画色をマスクの色に追加（8色まで。色をクリックで外す）" />
-                        <Button Content="×" Padding="8,2" Click="MaskClear_Click" ToolTipService.ToolTip="マスクの色をすべて外す" />
+                        <Button Content="＋" Padding="8,2" Click="MaskAdd_Click" ToolTipService.ToolTip="{x:Bind local:Texts.MaskAddTip}" />
+                        <Button Content="×" Padding="8,2" Click="MaskClear_Click" ToolTipService.ToolTip="{x:Bind local:Texts.MaskClearTip}" />
                     </StackPanel>
                     </StackPanel>
                     </Border>
@@ -313,12 +313,12 @@
                     <Border x:Name="ShadeSlot">
                     <StackPanel x:Name="ShadeSection" Spacing="8">
                         <Grid>
-                            <TextBlock Text="色の段階" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind local:Texts.Shades}" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
-                                <ToggleButton x:Name="HueShiftToggle" Padding="6,4" IsChecked="True" Click="ShadeOption_Click" ToolTipService.ToolTip="上の段で、影を青寄り・ハイライトを黄寄りに色相をずらす">
+                                <ToggleButton x:Name="HueShiftToggle" Padding="6,4" IsChecked="True" Click="ShadeOption_Click" ToolTipService.ToolTip="{x:Bind local:Texts.HueShiftTip}">
                                     <FontIcon Glyph="&#xE790;" FontSize="12" />
                                 </ToggleButton>
-                                <Button Padding="6,4" Click="ShadeBaseFromCurrent_Click" ToolTipService.ToolTip="今の描画色を基準にする">
+                                <Button Padding="6,4" Click="ShadeBaseFromCurrent_Click" ToolTipService.ToolTip="{x:Bind local:Texts.ShadeBaseTip}">
                                     <FontIcon Glyph="&#xE718;" FontSize="12" />
                                 </Button>
                                 <Button x:Name="ShadeDetachButton" Tag="shades" Padding="6,4" Click="PanelDetach_Click">
@@ -333,7 +333,7 @@
                             PointerPressed="ShadeCanvas_PointerPressed"
                             PointerMoved="ShadeCanvas_PointerMoved"
                             PointerReleased="ShadeCanvas_PointerReleased"
-                            ToolTipService.ToolTip="クリックで描画色に、右クリックでパレットに追加。右の帯で基準の色相を変える" />
+                            ToolTipService.ToolTip="{x:Bind local:Texts.ShadeCanvasTip}" />
                     </StackPanel>
                     </Border>
 
@@ -341,26 +341,26 @@
                     <Border x:Name="LayersSlot">
                     <StackPanel x:Name="LayersSection" Spacing="8">
                         <Grid>
-                            <TextBlock Text="レイヤー" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind local:Texts.Layers}" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <Button x:Name="LayersDetachButton" Tag="layers" HorizontalAlignment="Right" Padding="6,4" Click="PanelDetach_Click">
                                 <FontIcon Glyph="&#xE8A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <StackPanel Orientation="Horizontal" Spacing="3">
-                            <Button Width="30" Height="30" Padding="0" Click="LayerAdd_Click" ToolTipService.ToolTip="新しいレイヤーを上に追加">
+                            <Button Width="30" Height="30" Padding="0" Click="LayerAdd_Click" ToolTipService.ToolTip="{x:Bind local:Texts.LayerAddTip}">
                                 <FontIcon Glyph="&#xE710;" FontSize="12" />
                             </Button>
-                            <Button Width="30" Height="30" Padding="0" Click="LayerDuplicate_Click" ToolTipService.ToolTip="複製">
+                            <Button Width="30" Height="30" Padding="0" Click="LayerDuplicate_Click" ToolTipService.ToolTip="{x:Bind local:Texts.LayerDuplicateTip}">
                                 <FontIcon Glyph="&#xE8C8;" FontSize="12" />
                             </Button>
-                            <Button Width="30" Height="30" Padding="0" Click="LayerUp_Click" ToolTipService.ToolTip="ひとつ上へ">
+                            <Button Width="30" Height="30" Padding="0" Click="LayerUp_Click" ToolTipService.ToolTip="{x:Bind local:Texts.LayerUpTip}">
                                 <FontIcon Glyph="&#xE70E;" FontSize="12" />
                             </Button>
-                            <Button Width="30" Height="30" Padding="0" Click="LayerDown_Click" ToolTipService.ToolTip="ひとつ下へ">
+                            <Button Width="30" Height="30" Padding="0" Click="LayerDown_Click" ToolTipService.ToolTip="{x:Bind local:Texts.LayerDownTip}">
                                 <FontIcon Glyph="&#xE70D;" FontSize="12" />
                             </Button>
-                            <Button Width="30" Height="30" Padding="0" Click="LayerMerge_Click" Content="結" FontSize="12" ToolTipService.ToolTip="下のレイヤーと結合" />
-                            <Button Width="30" Height="30" Padding="0" Click="LayerDelete_Click" ToolTipService.ToolTip="削除">
+                            <Button Width="30" Height="30" Padding="0" Click="LayerMerge_Click" Content="{x:Bind local:Texts.MergeShort}" FontSize="12" ToolTipService.ToolTip="{x:Bind local:Texts.LayerMergeTip}" />
+                            <Button Width="30" Height="30" Padding="0" Click="LayerDelete_Click" ToolTipService.ToolTip="{x:Bind local:Texts.Delete}">
                                 <FontIcon Glyph="&#xE74D;" FontSize="12" />
                             </Button>
                         </StackPanel>
@@ -370,7 +370,7 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LayerOpacityText" VerticalAlignment="Center" FontSize="12" Text="不透明度 100%" />
+                            <TextBlock x:Name="LayerOpacityText" VerticalAlignment="Center" FontSize="12" Text="{x:Bind local:Texts.Opacity100}" />
                             <Slider
                                 x:Name="LayerOpacitySlider"
                                 Grid.Column="1"
@@ -387,20 +387,20 @@
                     <Border x:Name="PaletteSlot">
                     <StackPanel x:Name="PaletteSection" Spacing="8">
                     <Grid>
-                        <TextBlock Text="パレット" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="{x:Bind local:Texts.Palette}" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
                             <Button x:Name="PaletteDetachButton" Tag="palette" Padding="6,4" Click="PanelDetach_Click">
                                 <FontIcon Glyph="&#xE8A7;" FontSize="12" />
                             </Button>
-                            <Button Content="＋" Padding="8,2" Click="AddColor_Click" ToolTipService.ToolTip="描画色をパレットに追加" />
-                            <Button Content="…" Padding="8,2" ToolTipService.ToolTip="パレットの読み込み・書き出し">
+                            <Button Content="＋" Padding="8,2" Click="AddColor_Click" ToolTipService.ToolTip="{x:Bind local:Texts.PaletteAddTip}" />
+                            <Button Content="…" Padding="8,2" ToolTipService.ToolTip="{x:Bind local:Texts.PaletteMenuTip}">
                                 <Button.Flyout>
                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                        <MenuFlyoutItem Text="GIMPパレット（.gpl）を読み込む" Click="ImportPalette_Click" />
-                                        <MenuFlyoutItem Text="GIMPパレット（.gpl）に書き出す" Click="ExportPalette_Click" />
-                                        <MenuFlyoutItem Text="絵で使っている色を取り込む" Click="ImportUsedColors_Click" />
+                                        <MenuFlyoutItem Text="{x:Bind local:Texts.PaletteImport}" Click="ImportPalette_Click" />
+                                        <MenuFlyoutItem Text="{x:Bind local:Texts.PaletteExport}" Click="ExportPalette_Click" />
+                                        <MenuFlyoutItem Text="{x:Bind local:Texts.PaletteFromImage}" Click="ImportUsedColors_Click" />
                                         <MenuFlyoutSeparator />
-                                        <MenuFlyoutItem Text="初期パレットに戻す" Click="ResetPalette_Click" />
+                                        <MenuFlyoutItem Text="{x:Bind local:Texts.PaletteReset}" Click="ResetPalette_Click" />
                                     </MenuFlyout>
                                 </Button.Flyout>
                             </Button>
@@ -413,7 +413,7 @@
                         ItemHeight="27"
                         MaximumRowsOrColumns="7" />
                     <TextBlock
-                        Text="Alt+クリックでスポイト"
+                        Text="{x:Bind local:Texts.AltPickHint}"
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>

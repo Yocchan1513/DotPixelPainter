@@ -13,7 +13,7 @@ public sealed class PixelImage
     {
         if (width < 1 || height < 1 || width > MaxSize || height > MaxSize)
         {
-            throw new ArgumentOutOfRangeException(nameof(width), $"画像サイズは 1〜{MaxSize} の範囲で指定してください。");
+            throw new ArgumentOutOfRangeException(nameof(width), T($"画像サイズは 1〜{MaxSize} の範囲で指定してください。", $"The image size must be between 1 and {MaxSize}."));
         }
 
         Width = width;
@@ -67,7 +67,7 @@ public sealed class PixelImage
     {
         if (bgra.Length != _pixels.Length * 4)
         {
-            throw new ArgumentException("バイト列の長さが画像サイズと合いません。", nameof(bgra));
+            throw new ArgumentException(T("バイト列の長さが画像サイズと合いません。", "The byte length does not match the image size."), nameof(bgra));
         }
 
         for (int i = 0; i < _pixels.Length; i++)
@@ -82,7 +82,7 @@ public sealed class PixelImage
     {
         if (destination.Length != _pixels.Length * 4)
         {
-            throw new ArgumentException("書き出し先の長さが画像サイズと合いません。", nameof(destination));
+            throw new ArgumentException(T("書き出し先の長さが画像サイズと合いません。", "The destination length does not match the image size."), nameof(destination));
         }
 
         for (int i = 0; i < _pixels.Length; i++)
@@ -101,7 +101,7 @@ public sealed class PixelImage
     {
         if (destination.Length != _pixels.Length * 4)
         {
-            throw new ArgumentException("書き出し先の長さが画像サイズと合いません。", nameof(destination));
+            throw new ArgumentException(T("書き出し先の長さが画像サイズと合いません。", "The destination length does not match the image size."), nameof(destination));
         }
 
         for (int i = 0; i < _pixels.Length; i++)

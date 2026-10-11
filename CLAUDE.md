@@ -48,6 +48,14 @@ tools/package.ps1           配布用の zip を作る
 - サムネイルの部品はエクスプローラー（dllhost）の中で動くので、例外を外に出さない（失敗は HRESULT で返す）。
   確かめるときは、レジストリに登録せず DLL を直接読み込んで DllGetClassObject → IInitializeWithStream → IThumbnailProvider の順に呼ぶ。
 
+## 画面の言語（日本語・英語）
+
+- 画面に出す文字は、使う場所に両方を並べて `T("日本語", "English")` と書く（Core の `Lang`。global using 済み）。
+- MainWindow.xaml の文字は `Texts.cs` にプロパティを作り、`{x:Bind local:Texts.名前}` で使う。
+- 言語は起動の最初（App のコンストラクター）に決まる。view.txt の `language`（ja / en）か、なければ Windows の表示言語。
+- `T` の両方の文字は両方とも評価されるので、`++` などの副作用を入れない（先に変数に取る）。
+- `ErrorLog.Run` / `ErrorLog.Write` の最初の引数（記録のラベル）は日本語のままでよい。
+
 ## 版の上げ方
 
 - 版は `src/DotPixelPainter.App/DotPixelPainter.App.csproj` の `<Version>` で決める（ステータスバーとバージョン情報に出る）。

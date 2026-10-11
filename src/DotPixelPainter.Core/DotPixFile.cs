@@ -65,20 +65,22 @@ public static class DotPixFile
     public static PixelDocument Read(Stream input, string name)
     {
         using var zip = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: true);
-        ZipArchiveEntry entry = zip.GetEntry("document.json") ?? throw new FormatException("DotPixelPainter のファイルではありません（document.json がありません）。");
+        ZipArchiveEntry entry = zip.GetEntry("document.json") ?? throw new FormatException(T("DotPixelPainter のファイルではありません（document.json がありません）。", "This is not a DotPixelPainter file (document.json is missing)."));
 
         using var json = JsonDocument.Parse(ReadAll(entry));
         JsonElement root = json.RootElement;
         if (root.TryGetProperty("format", out JsonElement format) && format.GetString() != "dotpix")
         {
-            throw new FormatException("DotPixelPainter のファイルではありません。");
+            throw new FormatException(T("DotPixelPainter のファイルではありません。", "This is not a DotPixelPainter file."));
         }
 
         int version = root.GetProperty("version").GetInt32();
         if (version > Version)
         {
-            throw new FormatException(string.Create(CultureInfo.InvariantCulture,
-                $"新しいバージョン（{version}）の DotPixelPainter で作られたファイルです。アプリを更新してください。"));
+            string v = version.ToString(CultureInfo.InvariantCulture);
+            throw new FormatException(T(
+                $"新しいバージョン（{v}）の DotPixelPainter で作られたファイルです。アプリを更新してください。",
+                $"This file was made with a newer version of DotPixelPainter ({v}). Please update the app."));
         }
 
         int width = root.GetProperty("width").GetInt32();
@@ -87,15 +89,15 @@ public static class DotPixFile
         var layers = new List<Layer>();
         foreach (JsonElement item in root.GetProperty("layers").EnumerateArray())
         {
-            string file = item.GetProperty("file").GetString() ?? throw new FormatException("レイヤーの画像が指定されていません。");
-            ZipArchiveEntry png = zip.GetEntry(file) ?? throw new FormatException($"レイヤーの画像 {file} が見つかりません。");
+            string file = item.GetProperty("file").GetString() ?? throw new FormatException(T("レイヤーの画像が指定されていません。", "A layer image is not specified."));
+            ZipArchiveEntry png = zip.GetEntry(file) ?? throw new FormatException(T($"レイヤーの画像 {file} が見つかりません。", $"The layer image {file} was not found."));
             PixelImage image = PngCodec.Decode(ReadAll(png));
             if (image.Width != width || image.Height != height)
             {
-                throw new FormatException($"レイヤーの画像 {file} の大きさが合いません。");
+                throw new FormatException(T($"レイヤーの画像 {file} の大きさが合いません。", $"The layer image {file} has the wrong size."));
             }
 
-            var layer = new Layer(item.GetProperty("name").GetString() ?? "レイヤー", image)
+            var layer = new Layer(item.GetProperty("name").GetString() ?? T("レイヤー", "Layers"), image)
             {
                 Visible = !item.TryGetProperty("visible", out JsonElement v) || v.GetBoolean(),
                 Opacity = item.TryGetProperty("opacity", out JsonElement o) ? Math.Clamp(o.GetDouble(), 0, 1) : 1.0,
@@ -105,7 +107,7 @@ public static class DotPixFile
 
         if (layers.Count == 0)
         {
-            throw new FormatException("レイヤーが1枚もありません。");
+            throw new FormatException(T("レイヤーが1枚もありません。", "There are no layers."));
         }
 
         int active = root.TryGetProperty("activeLayer", out JsonElement a) ? a.GetInt32() : 0;

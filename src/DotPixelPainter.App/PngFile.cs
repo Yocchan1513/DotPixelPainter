@@ -26,7 +26,7 @@ public static class PngFile
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
         if (decoder.PixelWidth > PixelImage.MaxSize || decoder.PixelHeight > PixelImage.MaxSize)
         {
-            throw new InvalidOperationException($"画像が大きすぎます（{decoder.PixelWidth}×{decoder.PixelHeight}）。{PixelImage.MaxSize}×{PixelImage.MaxSize} までに対応しています。");
+            throw new InvalidOperationException(T($"画像が大きすぎます（{decoder.PixelWidth}×{decoder.PixelHeight}）。{PixelImage.MaxSize}×{PixelImage.MaxSize} までに対応しています。", $"The image is too large ({decoder.PixelWidth}×{decoder.PixelHeight}). Up to {PixelImage.MaxSize}×{PixelImage.MaxSize} is supported."));
         }
 
         PixelDataProvider data = await decoder.GetPixelDataAsync(

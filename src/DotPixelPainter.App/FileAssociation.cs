@@ -36,7 +36,7 @@ internal static partial class FileAssociation
         string exe = ExePath;
         using (RegistryKey prog = Registry.CurrentUser.CreateSubKey($@"{ClassesRoot}\{ProgId}"))
         {
-            prog.SetValue(null, "DotPixelPainter ドキュメント");
+            prog.SetValue(null, T("DotPixelPainter ドキュメント", "DotPixelPainter document"));
             using (RegistryKey icon = prog.CreateSubKey("DefaultIcon"))
             {
                 icon.SetValue(null, $"\"{exe}\",0");

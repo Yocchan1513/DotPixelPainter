@@ -16,19 +16,19 @@ public sealed partial class MainWindow
             if (registered)
             {
                 FileAssociation.Unregister();
-                await ShowMessageAsync("関連付けを解除しました", ".dotpix ファイルをダブルクリックしても、このアプリでは開かなくなりました。");
+                await ShowMessageAsync(T("関連付けを解除しました", "File association removed"), T(".dotpix ファイルをダブルクリックしても、このアプリでは開かなくなりました。", "Double-clicking a .dotpix file no longer opens this app."));
             }
             else
             {
                 FileAssociation.Register();
                 await ShowMessageAsync(
-                    "関連付けました",
-                    $".dotpix ファイルをダブルクリックすると、このアプリで開きます。\n（登録したアプリの場所: {FileAssociation.ExePath}）\n\nアプリのフォルダを動かしたときは、もう一度登録してください。");
+                    T("関連付けました", "File association added"),
+                    T($".dotpix ファイルをダブルクリックすると、このアプリで開きます。エクスプローラーでは中身の絵（サムネイル）も出ます。\n（登録したアプリの場所: {FileAssociation.ExePath}）\n\nアプリのフォルダを動かしたときは、もう一度登録してください。", $"Double-clicking a .dotpix file now opens this app, and Explorer shows .dotpix thumbnails.\n(Registered app: {FileAssociation.ExePath})\n\nIf you move the app folder, register it again."));
             }
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("うまくいきませんでした", ex.Message);
+            await ShowMessageAsync(T("うまくいきませんでした", "Something went wrong"), ex.Message);
         }
 
         UpdateAssociationItem();
@@ -56,7 +56,7 @@ public sealed partial class MainWindow
                     }
                     catch (Exception ex)
                     {
-                        await ShowMessageAsync("開けませんでした", $"{path}\n{ex.Message}");
+                        await ShowMessageAsync(T("開けませんでした", "Could not open the file"), $"{path}\n{ex.Message}");
                     }
                 }
             });

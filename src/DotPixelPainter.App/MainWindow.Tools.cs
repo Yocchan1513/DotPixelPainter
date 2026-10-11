@@ -47,25 +47,25 @@ public sealed partial class MainWindow
 
     private static string ToolName(Tool tool) => tool switch
     {
-        Tool.Pencil => "鉛筆",
-        Tool.Eraser => "消しゴム",
-        Tool.Fill => "塗りつぶし",
-        Tool.Select => "選択",
-        _ => "スポイト",
+        Tool.Pencil => T("鉛筆", "Pencil"),
+        Tool.Eraser => T("消しゴム", "Eraser"),
+        Tool.Fill => T("塗りつぶし", "Fill"),
+        Tool.Select => T("選択", "Select"),
+        _ => T("スポイト", "Eyedropper"),
     };
 
     private static string ShapeName(ShapeKind shape) => shape switch
     {
-        ShapeKind.Freehand => "自由線",
-        ShapeKind.Line => "直線",
-        ShapeKind.Rectangle => "四角",
-        ShapeKind.FilledRectangle => "塗り四角",
-        ShapeKind.Ellipse => "円",
-        _ => "塗り円",
+        ShapeKind.Freehand => T("自由線", "Freehand"),
+        ShapeKind.Line => T("直線", "Line"),
+        ShapeKind.Rectangle => T("四角", "Rectangle"),
+        ShapeKind.FilledRectangle => T("塗り四角", "Filled rectangle"),
+        ShapeKind.Ellipse => T("円", "Ellipse"),
+        _ => T("塗り円", "Filled ellipse"),
     };
 
     private string ToolStatus() =>
-        _tool is Tool.Pencil or Tool.Eraser ? $"{ToolName(_tool)}・{ShapeName(_shape)}・{_brush.Size}px" : ToolName(_tool);
+        _tool is Tool.Pencil or Tool.Eraser ? T($"{ToolName(_tool)}・{ShapeName(_shape)}・{_brush.Size}px", $"{ToolName(_tool)} · {ShapeName(_shape)} · {_brush.Size}px") : ToolName(_tool);
 
     private void BuildToolPanel()
     {
@@ -419,7 +419,7 @@ public sealed partial class MainWindow
         ImageAction(d => (changed = d.CleanupLines(area)) > 0);
         if (changed == 0)
         {
-            ErrorLog.Run("線の整形", () => ShowMessageAsync("線の整形", "整える角は見つかりませんでした（1pxの線の、L字になった角の余分な1ドットを消します）。"));
+            ErrorLog.Run("線の整形", () => ShowMessageAsync(T("線の整形", "Clean up lines"), T("整える角は見つかりませんでした（1pxの線の、L字になった角の余分な1ドットを消します）。", "No corners to clean up were found (this removes the extra pixel in L-shaped corners of 1px lines).")));
         }
     }
 }

@@ -16,7 +16,7 @@ public sealed class PixelDocument
         Name = name;
         Width = width;
         Height = height;
-        _layers.Add(new Layer("レイヤー 1", width, height));
+        _layers.Add(new Layer(T("レイヤー 1", "Layer 1"), width, height));
     }
 
     /// <summary>ファイルから読んだレイヤーで作る（.dotpix の読み込み用）。読み込み直後は「保存済み」。</summary>
@@ -78,7 +78,14 @@ public sealed class PixelDocument
     /// <summary>アクティブなレイヤーのすぐ上に新しいレイヤーを足し、それを選ぶ。</summary>
     public Layer AddLayer(string? name = null)
     {
-        var layer = new Layer(name ?? $"レイヤー {_nextLayerNumber++}", Width, Height);
+        if (name is null)
+        {
+            // 番号は1回だけ進める（T の両方の文字に書くと2回進んでしまう）
+            int number = _nextLayerNumber++;
+            name = T($"レイヤー {number}", $"Layer {number}");
+        }
+
+        var layer = new Layer(name, Width, Height);
         Push(new LayerInsertEdit(this, layer, ActiveLayerIndex + 1, ActiveLayerIndex));
         return layer;
     }
@@ -87,7 +94,7 @@ public sealed class PixelDocument
     public Layer DuplicateLayer(int index)
     {
         Layer source = _layers[index];
-        var copy = new Layer($"{source.Name} のコピー", source.Image.Clone())
+        var copy = new Layer(T($"{source.Name} のコピー", $"{source.Name} copy"), source.Image.Clone())
         {
             Visible = source.Visible,
             Opacity = source.Opacity,
@@ -181,7 +188,7 @@ public sealed class PixelDocument
     {
         if (width < 1 || height < 1 || width > PixelImage.MaxSize || height > PixelImage.MaxSize)
         {
-            throw new ArgumentOutOfRangeException(nameof(width), $"画像サイズは 1〜{PixelImage.MaxSize} の範囲で指定してください。");
+            throw new ArgumentOutOfRangeException(nameof(width), T($"画像サイズは 1〜{PixelImage.MaxSize} の範囲で指定してください。", $"The image size must be between 1 and {PixelImage.MaxSize}."));
         }
 
         if (!force && width == Width && height == Height)

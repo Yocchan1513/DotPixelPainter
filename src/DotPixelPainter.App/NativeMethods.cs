@@ -6,6 +6,10 @@ internal static partial class NativeMethods
 {
     private const int DwmwaUseImmersiveDarkMode = 20;
 
+    /// <summary>Windows の表示言語（LANGID）。下位 10bit が言語の種類（0x11 が日本語）。</summary>
+    [LibraryImport("kernel32.dll")]
+    public static partial ushort GetUserDefaultUILanguage();
+
     [LibraryImport("dwmapi.dll")]
     private static partial int DwmSetWindowAttribute(nint hwnd, int attribute, ref int value, int size);
 

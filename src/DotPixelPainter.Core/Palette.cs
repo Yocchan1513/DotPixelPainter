@@ -10,9 +10,9 @@ public sealed class Palette
 
     private readonly List<uint> _colors = [];
 
-    public Palette(string name = "カスタム")
+    public Palette(string? name = null)
     {
-        Name = name;
+        Name = name ?? T("カスタム", "Custom");
     }
 
     public string Name { get; set; }
@@ -67,7 +67,7 @@ public sealed class Palette
         return sb.ToString();
     }
 
-    public static Palette FromHexList(string text, string name = "カスタム")
+    public static Palette FromHexList(string text, string? name = null)
     {
         var palette = new Palette(name);
         foreach (string raw in text.Split('\n'))
@@ -107,7 +107,7 @@ public sealed class Palette
         string[] lines = text.Replace("\r", string.Empty).Split('\n');
         if (lines.Length == 0 || !lines[0].Trim().Equals("GIMP Palette", StringComparison.OrdinalIgnoreCase))
         {
-            throw new FormatException("GIMP パレット（.gpl）ではありません。");
+            throw new FormatException(T("GIMP パレット（.gpl）ではありません。", "This is not a GIMP palette (.gpl)."));
         }
 
         var palette = new Palette();

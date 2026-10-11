@@ -52,7 +52,7 @@ public sealed partial class MainWindow
                 BorderBrush = stroke,
                 Background = new SolidColorBrush(ToColor(c >> 24 == 0 ? 0x00000000 : c)),
             };
-            ToolTipService.SetToolTip(swatch, c >> 24 == 0 ? "透明（クリックで外す）" : $"#{c:X8}（クリックで外す）");
+            ToolTipService.SetToolTip(swatch, c >> 24 == 0 ? T("透明（クリックで外す）", "Transparent (click to remove)") : T($"#{c:X8}（クリックで外す）", $"#{c:X8} (click to remove)"));
             swatch.Tapped += (_, _) =>
             {
                 _mask.Remove(c);
@@ -65,6 +65,8 @@ public sealed partial class MainWindow
     }
 
     private string MaskStatus() => _mask.IsActive
-        ? $"　｜　マスク: {(_mask.Mode == ColorMaskMode.Protect ? "保護" : "限定")} {_mask.Colors.Count}色"
+        ? _mask.Mode == ColorMaskMode.Protect
+            ? T($"　｜　マスク: 保護 {_mask.Colors.Count}色", $"   |   Mask: protect {_mask.Colors.Count} colors")
+            : T($"　｜　マスク: 限定 {_mask.Colors.Count}色", $"   |   Mask: only {_mask.Colors.Count} colors")
         : "";
 }
