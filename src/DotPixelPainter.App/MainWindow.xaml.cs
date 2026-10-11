@@ -80,10 +80,12 @@ public sealed partial class MainWindow : Window
         // 終了時に開いていたファイルを覚える（計測やテストで起動したときは、本来の記録を上書きしない）
         Closed += (_, _) =>
         {
-            if (ShouldRestoreSession() || _probe.FilesToOpen.Count > 0)
+            if (!_probe.Isolated && (ShouldRestoreSession() || _probe.FilesToOpen.Count > 0))
             {
                 SaveSession();
             }
+
+            EndRecovery();
         };
         InitializePanels();
         AddTab(CreateUntitled());
@@ -228,6 +230,7 @@ public sealed partial class MainWindow : Window
         Tabs.TabItems.Remove(item);
         _tabs.Remove(item);
         ForgetClosedReference();
+        ForgetBackup(tab);
         if (_bitmapOwner == tab)
         {
             _bitmap?.Dispose();
@@ -399,6 +402,7 @@ public sealed partial class MainWindow : Window
 
     private void AfterHistoryChange(DocumentTab tab)
     {
+        ScheduleAutosave();
         RefreshReferenceView();
         tab.ImageChanged = true;
         if (tab.ShownSize != (tab.Document.Width, tab.Document.Height))
@@ -800,7 +804,7 @@ public sealed partial class MainWindow : Window
         if (zoomWasUnset)
         {
             // 倍率が決まったので表示を更新する（描画中は文字を変えず、終わってから）
-            DispatcherQueue.TryEnqueue(() => UpdateStatus(null));
+            DispatcherQueue.Post("状態の表示", () => UpdateStatus(null));
         }
 
         var rect = new Rect(ox / scale, oy / scale, document.Width * tab.Zoom / scale, document.Height * tab.Zoom / scale);
@@ -832,7 +836,7 @@ public sealed partial class MainWindow : Window
         {
             _firstFrameReported = true;
             _probe.Mark("first-draw");
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            DispatcherQueue.Post("起動後の準備", priority: Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, action: () =>
             {
                 if (_probe.ReportFirstFrame())
                 {
@@ -846,6 +850,7 @@ public sealed partial class MainWindow : Window
                 _restoreSession = LoadSession().Restore;
                 BuildMenus();
                 AddPatternItems();
+                StartRecovery();
                 PixelPerfectBox.IsChecked = ViewSettings.Get("pixel-perfect") == "on";
                 if (_probe.FilesToOpen.Count > 0)
                 {
@@ -921,6 +926,38 @@ public sealed partial class MainWindow : Window
                         await _startupOpen;
                         SetSplit(true);
                     });
+                }
+                else if (_probe.TestOpen is "crash" or "crash-hard" && CurrentTab is { } crashTab)
+                {
+                    // 絵を描いた（保存していない）状態にしてから、わざと想定外のエラーを起こす。
+                    // crash: 画面の部品のイベントの中のエラー（受け止めて続ける）。crash-hard: 受け止められないエラー（落ちる）
+                    PixelStroke fill = crashTab.Document.BeginStroke();
+                    fill.FloodFill(0, 0, 0xFF3060C0);
+                    fill.Commit();
+                    AfterHistoryChange(crashTab);
+                    if (_probe.TestOpen == "crash")
+                    {
+                        EventHandler<object>? once = null;
+                        once = (_, _) =>
+                        {
+                            Root.LayoutUpdated -= once;
+                            throw new InvalidOperationException("テスト用のエラー（続けられる）");
+                        };
+                        Root.LayoutUpdated += once;
+                        Root.InvalidateArrange();
+                    }
+                    else
+                    {
+                        // 描いてから5秒後に落ちる（そのあいだに自動の控えが取られるはず）
+                        var later = DispatcherQueue.CreateTimer();
+                        later.Interval = TimeSpan.FromSeconds(5);
+                        later.Tick += (_, _) => throw new InvalidOperationException("テスト用のエラー（落ちる）");
+                        later.Start();
+                    }
+                }
+                else if (_probe.TestOpen == "restore")
+                {
+                    ErrorLog.Run("控えの復元（テスト）", () => RestoreBackupsAsync(Recovery.List()));
                 }
                 else if (_probe.TestOpen == "rotate")
                 {
@@ -1197,6 +1234,7 @@ public sealed partial class MainWindow : Window
         _stroke = null;
         _pixelPath = null;
         RefreshReferenceView();
+        ScheduleAutosave();
         _strokeTab = null;
         UpdateUndoButtons();
     }

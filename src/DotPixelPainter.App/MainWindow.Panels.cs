@@ -21,10 +21,7 @@ public sealed partial class MainWindow
     private readonly Dictionary<string, DockPanel> _panels = [];
     private bool _closingFloatingPanels;
 
-    private static string PanelsFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "panels.txt");
+    private static string PanelsFilePath => AppData.File("panels.txt");
 
     private void InitializePanels()
     {

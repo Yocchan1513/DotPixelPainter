@@ -21,10 +21,7 @@ public sealed partial class MainWindow
     private bool _syncingPicker;
 
     /// <summary>次回起動時も同じパレットを使えるよう、ここに自動保存する。透明度も保てる独自の16進リスト形式。</summary>
-    private static string PaletteFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "palette.txt");
+    private static string PaletteFilePath => AppData.File("palette.txt");
 
     private void InitializePalette()
     {

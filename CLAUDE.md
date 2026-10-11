@@ -96,3 +96,7 @@ UI の見た目や操作感は Claude Code だけでは確かめにくい。フ�
 - 操作の正しさは、できるだけ Core の単体テストで確かめる。
 - 「開く」「名前を付けて保存」のダイアログは PickerHost という別プロセスで動く。入力を送るときは、前面がそのダイアログであることを確かめる。
 - ファイルの読み書きは、起動時にファイルのパスを渡すと開ける（`DotPixelPainter.exe foo.dotpix`）。保存したファイルをこれで開き直して確かめるとよい。
+- 開発で起動するときは `--isolated` を付ける。起動中の利用者のアプリにファイルを渡さず、作業の控え・起動の印・前回のタブの記録にも触らない。
+- 設定や記録の場所は、環境変数 `DOTPIXELPAINTER_DATA` で別のフォルダにできる。控えや「前回は正しく終了しませんでした」の流れを試すときはこれを使い、利用者の %LOCALAPPDATA%\DotPixelPainter を乱さない。
+- `--test-open 名前` で、最初の描画のあとにダイアログを開くなどの操作をする（MainWindow.xaml.cs の起動後の準備を参照）。crash（受け止めて続けるエラー）・crash-hard（落ちるエラー）・restore（控えの復元）もある。
+- WinUI では、DispatcherQueue に後回しにした処理の中のエラーは Application.UnhandledException を通らずにアプリが落ちる。後回しにする処理は `DispatcherQueue.Post(名前, 処理)`（ErrorLog.cs）で包む。

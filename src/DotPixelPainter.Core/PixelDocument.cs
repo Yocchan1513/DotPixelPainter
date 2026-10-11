@@ -60,6 +60,9 @@ public sealed class PixelDocument
 
     public void MarkSaved() => History.MarkSaved();
 
+    /// <summary>「保存していない」状態にする（作業の控えから復元したときなど）。</summary>
+    public void MarkUnsaved() => History.MarkUnsaved();
+
     /// <summary>アクティブなレイヤーにひと筆描き始める。描き終わったら Commit を呼ぶ。</summary>
     /// <remarks>mask を渡すと、カラーマスクで禁止された画素には描かない（描く道具のときだけ渡す）。</remarks>
     /// <remarks>pattern を渡すと、ディザのパターンで塗る。</remarks>

@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Reflection;
+using Microsoft.UI.Dispatching;
 
 namespace DotPixelPainter;
 
@@ -7,10 +9,11 @@ namespace DotPixelPainter;
 /// </summary>
 public static class ErrorLog
 {
-    public static string FilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "error.log");
+    public static string FilePath => AppData.File("error.log");
+
+    /// <summary>アプリの版（報告のときに分かるよう、記録に書く）。</summary>
+    private static readonly string Version =
+        typeof(ErrorLog).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "?";
 
     public static void Write(string where, Exception ex)
     {
@@ -19,7 +22,7 @@ public static class ErrorLog
             Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
             File.AppendAllText(FilePath, string.Create(
                 CultureInfo.InvariantCulture,
-                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {where}\n{ex}\n\n"));
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] v{Version} {where}\n{ex}\n\n"));
         }
         catch (Exception)
         {
@@ -39,4 +42,22 @@ public static class ErrorLog
             Write(where, ex);
         }
     }
+
+    /// <summary>
+    /// UI スレッドで後から実行する。WinUI では、後回しにした処理の中のエラーは Application.UnhandledException を通らず
+    /// そのままアプリが落ちるので、ここで受け止めて記録し、「エラーが起きました」の流れ（控え・お知らせ）に乗せる。
+    /// </summary>
+    public static bool Post(this DispatcherQueue queue, string where, Action action, DispatcherQueuePriority priority = DispatcherQueuePriority.Normal) =>
+        queue.TryEnqueue(priority, () =>
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                Write(where, ex);
+                App.NotifyError();
+            }
+        });
 }

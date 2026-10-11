@@ -10,10 +10,7 @@ public sealed record NewDocumentSettings(int Width, int Height, bool WhiteBackgr
 {
     public static readonly NewDocumentSettings Default = new(64, 64, false);
 
-    private static string FilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "new-document.txt");
+    private static string FilePath => AppData.File("new-document.txt");
 
     public static NewDocumentSettings Load()
     {

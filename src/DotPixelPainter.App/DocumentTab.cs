@@ -14,7 +14,16 @@ public sealed class DocumentTab
     /// <summary>最後に表示を合わせたときの画像の大きさ。元に戻すなどで大きさが変わったことに気づくために使う。</summary>
     public (int Width, int Height) ShownSize { get; set; }
 
-    public PixelDocument Document { get; }
+    public PixelDocument Document { get; }
+
+    /// <summary>作業の控え（Recovery）のファイル名に使う番号。</summary>
+    public string RecoveryId { get; } = Guid.NewGuid().ToString("N");
+
+    /// <summary>最後に控えたときの内容の番号（UndoHistory.Revision）。同じなら控え直さない。</summary>
+    public int AutosavedRevision { get; set; } = -1;
+
+    /// <summary>控えのファイルがあるか。</summary>
+    public bool HasBackup { get; set; }
 
     /// <summary>
     /// 読み込んだ元のファイル（PSD のように、保存先にならないファイルから作ったときだけ）。
