@@ -106,7 +106,14 @@ public sealed partial class MainWindow
 
         RefSourceBox = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, PlaceholderText = Texts.RefChoose };
         ToolTipService.SetToolTip(RefSourceBox, Texts.RefSourceTip);
-        RefSourceBox.DropDownOpened += RefSourceBox_DropDownOpened;
+        RefSourceBox.DropDownClosed += (_, _) =>
+        {
+            // 開いているあいだに来た更新は、閉じてから反映する
+            if (_refChoicesStale)
+            {
+                RefreshReferenceChoices();
+            }
+        };
         RefSourceBox.SelectionChanged += RefSourceBox_SelectionChanged;
 
         Button IconButton(string glyph, string tip, RoutedEventHandler click)
@@ -168,9 +175,13 @@ public sealed partial class MainWindow
 
     // ---- 表示するものを選ぶ ----
 
-    private void RefSourceBox_DropDownOpened(object? sender, object e) => RefreshReferenceChoices();
+    private bool _refChoicesStale;
 
-    /// <summary>選択肢を、開いているタブ（タブの並び順）と資料の画像で作り直す。</summary>
+    /// <summary>
+    /// 選択肢を、開いているタブ（タブの並び順）と資料の画像で作り直す。タブの追加・閉じる・名前の変更と、資料を開いたときに呼ぶ。
+    /// 一覧を開いている最中に項目を入れ替えると WinUI の中でエラー（要素が見つかりません）になることがあるので、
+    /// 開いているあいだは閉じるまで待ち、中身が変わっていなければ作り直さない。
+    /// </summary>
     private void RefreshReferenceChoices()
     {
         if (RefSourceBox is null)
@@ -178,27 +189,42 @@ public sealed partial class MainWindow
             return;
         }
 
-        _refChoices.Clear();
+        if (RefSourceBox.IsDropDownOpen)
+        {
+            _refChoicesStale = true;
+            return;
+        }
+
+        _refChoicesStale = false;
+        var choices = new List<object>();
         foreach (object item in Tabs.TabItems)
         {
             if (item is TabViewItem tabItem && _tabs.TryGetValue(tabItem, out DocumentTab? tab))
             {
-                _refChoices.Add(tab);
+                choices.Add(tab);
             }
         }
 
-        _refChoices.AddRange(_referenceImages);
+        choices.AddRange(_referenceImages);
+        List<string> labels = choices.Select(choice => choice switch
+        {
+            DocumentTab tab => tab.Document.Name,
+            ReferenceImage image => T($"資料: {image.Name}", $"Reference: {image.Name}"),
+            _ => "",
+        }).ToList();
 
         _refSyncing = true;
-        RefSourceBox.Items.Clear();
-        foreach (object choice in _refChoices)
+        bool same = choices.SequenceEqual(_refChoices) && labels.SequenceEqual(RefSourceBox.Items.OfType<string>());
+        if (!same)
         {
-            RefSourceBox.Items.Add(choice switch
+            _refChoices.Clear();
+            _refChoices.AddRange(choices);
+            RefSourceBox.SelectedIndex = -1;
+            RefSourceBox.Items.Clear();
+            foreach (string label in labels)
             {
-                DocumentTab tab => tab.Document.Name,
-                ReferenceImage image => T($"資料: {image.Name}", $"Reference: {image.Name}"),
-                _ => "",
-            });
+                RefSourceBox.Items.Add(label);
+            }
         }
 
         RefSourceBox.SelectedIndex = _refSource is null ? -1 : _refChoices.IndexOf(_refSource);
@@ -278,19 +304,17 @@ public sealed partial class MainWindow
         }
     }
 
-    /// <summary>右に出していたタブが閉じられたら、何も出さない状態にする。</summary>
+    /// <summary>タブを閉じたとき。右に出していたタブなら何も出さない状態にし、選択肢も合わせる。</summary>
     private void ForgetClosedReference()
     {
         if (_refSource is DocumentTab tab && !_tabs.ContainsValue(tab))
         {
             _refSource = null;
             _refDirty = true;
-            if (SplitOpen)
-            {
-                RefreshReferenceChoices();
-                RefCanvas.Invalidate();
-            }
+            RefCanvas?.Invalidate();
         }
+
+        RefreshReferenceChoices();
     }
 
     // ---- 描く ----

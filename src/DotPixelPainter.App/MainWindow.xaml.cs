@@ -148,6 +148,7 @@ public sealed partial class MainWindow : Window
         _tabs[item] = tab;
         Tabs.TabItems.Add(item);
         Tabs.SelectedItem = item;
+        RefreshReferenceChoices();
     }
 
     /// <summary>このファイルを開いているタブ。保存先が同じか、保存前の PSD などの読み込み元が同じものを探す。</summary>
@@ -176,6 +177,7 @@ public sealed partial class MainWindow : Window
             }
         }
 
+        RefreshReferenceChoices(); // 名前が変わったときのため（変わっていなければ何もしない）
         UpdateWindowTitle();
     }
 
