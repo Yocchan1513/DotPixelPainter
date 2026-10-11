@@ -21,10 +21,7 @@ public sealed partial class MainWindow
     private bool _syncingPicker;
 
     /// <summary>次回起動時も同じパレットを使えるよう、ここに自動保存する。透明度も保てる独自の16進リスト形式。</summary>
-    private static string PaletteFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "palette.txt");
+    private static string PaletteFilePath => AppData.File("palette.txt");
 
     private void InitializePalette()
     {
@@ -90,7 +87,7 @@ public sealed partial class MainWindow
                 Background = new SolidColorBrush(ToColor(argb)),
                 Tag = argb,
             };
-            ToolTipService.SetToolTip(swatch, $"#{argb:X8}（右クリックで編集）");
+            ToolTipService.SetToolTip(swatch, T($"#{argb:X8}（右クリックで編集）", $"#{argb:X8} (right-click to edit)"));
             swatch.Tapped += (_, _) => SetCurrentColor(_palette.Colors[index]);
             swatch.RightTapped += (s, e) =>
             {
@@ -114,13 +111,13 @@ public sealed partial class MainWindow
             return _swatchMenu;
         }
 
-        var replace = new MenuFlyoutItem { Text = "描画色で置き換え" };
+        var replace = new MenuFlyoutItem { Text = T("描画色で置き換え", "Replace with foreground color") };
         replace.Click += (_, _) =>
         {
             _palette.Replace(_swatchMenuIndex, _color);
             OnPaletteChanged();
         };
-        var remove = new MenuFlyoutItem { Text = "削除" };
+        var remove = new MenuFlyoutItem { Text = T("削除", "Delete") };
         remove.Click += (_, _) =>
         {
             _palette.RemoveAt(_swatchMenuIndex);
@@ -181,7 +178,7 @@ public sealed partial class MainWindow
     {
         if (!_palette.Add(_color))
         {
-            await ShowMessageAsync("追加できません", $"パレットには {Palette.MaxColors} 色まで登録できます。");
+            await ShowMessageAsync(T("追加できません", "Cannot add"), T($"パレットには {Palette.MaxColors} 色まで登録できます。", $"A palette can hold up to {Palette.MaxColors} colors."));
             return;
         }
 
@@ -204,7 +201,7 @@ public sealed partial class MainWindow
             Palette loaded = Palette.FromGpl(await FileIO.ReadTextAsync(file));
             if (loaded.Colors.Count == 0)
             {
-                await ShowMessageAsync("読み込めませんでした", "色が1つも入っていません。");
+                await ShowMessageAsync(T("読み込めませんでした", "Could not load"), T("色が1つも入っていません。", "It contains no colors."));
                 return;
             }
 
@@ -213,7 +210,7 @@ public sealed partial class MainWindow
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("読み込めませんでした", ex.Message);
+            await ShowMessageAsync(T("読み込めませんでした", "Could not load"), ex.Message);
         }
     }
 
@@ -221,7 +218,7 @@ public sealed partial class MainWindow
     {
         var picker = new FileSavePicker { SuggestedFileName = "palette" };
         InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
-        picker.FileTypeChoices.Add("GIMP パレット", [".gpl"]);
+        picker.FileTypeChoices.Add(T("GIMP パレット", "GIMP palette"), [".gpl"]);
         StorageFile? file = await picker.PickSaveFileAsync();
         if (file is null)
         {
@@ -234,7 +231,7 @@ public sealed partial class MainWindow
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("書き出せませんでした", ex.Message);
+            await ShowMessageAsync(T("書き出せませんでした", "Could not export"), ex.Message);
         }
     }
 

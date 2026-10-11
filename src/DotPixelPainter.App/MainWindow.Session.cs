@@ -9,10 +9,7 @@ namespace DotPixelPainter;
 /// </summary>
 public sealed partial class MainWindow
 {
-    private static string SessionFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "session.txt");
+    private static string SessionFilePath => AppData.File("session.txt");
 
     /// <summary>前回のタブを開き直すか（「ヘルプ」メニューで切り替える。初めはオン）。</summary>
     private bool _restoreSession = true;
@@ -114,5 +111,5 @@ public sealed partial class MainWindow
     }
 
     private bool ShouldRestoreSession() =>
-        _probe.FilesToOpen.Count == 0 && _probe.TestOpen is null && _probe.LogPath is null;
+        _probe.FilesToOpen.Count == 0 && !_probe.Isolated;
 }

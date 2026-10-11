@@ -327,7 +327,7 @@ public sealed partial class MainWindow
         }
 
         _brush = BrushMask.Create((int)BrushSizeSlider.Value, RoundBrushToggle.IsChecked == true);
-        BrushSizeText.Text = $"ブラシ {_brush.Size}px";
+        BrushSizeText.Text = T($"ブラシ {_brush.Size}px", $"Brush {_brush.Size}px");
         UpdateStatus(null);
     }
 }

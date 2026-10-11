@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   配布用の zip を作る（GitHub の Releases に置くもの）。
 
@@ -6,7 +6,7 @@
   x64 と ARM64 のそれぞれについて、次の2種類を作る。
     完全版: Windows App SDK を同梱する。展開してすぐ動く。
     軽量版: Windows App SDK を同梱しない。PC に Windows App Runtime 2.5 が必要。
-  デバッグ用の .pdb は外し、LICENSE.txt・THIRD-PARTY-NOTICES.md・使い方の説明を入れる。
+  デバッグ用の .pdb は外し、LICENSE.txt・THIRD-PARTY-NOTICES.md・使い方の説明（日本語と英語）を入れる。
   版の番号は DotPixelPainter.App.csproj の <Version> から取る。
   できたものは artifacts/package/ に置く。
 
@@ -42,7 +42,8 @@ DotPixelPainter $version
   署名のないアプリなので、初めて起動するときに「Windows によって PC が保護されました」と出ることがあります。
   そのときは「詳細情報」→「実行」を押してください。
 
-  .dotpix ファイルをダブルクリックで開きたいときは、アプリの「ヘルプ」メニューから登録できます。
+  .dotpix ファイルをダブルクリックで開き、エクスプローラーで中身の絵（サムネイル）を出したいときは、
+  アプリの「ヘルプ」メニューから登録できます。
   アンインストールはフォルダを消すだけです（設定は %LOCALAPPDATA%\DotPixelPainter にあります）。
 
 動作環境
@@ -58,6 +59,39 @@ $readmeLite = $readmeFull -replace '動作環境\r?\n  Windows 11', @"
   Windows 11
   Windows App Runtime 2.5 以上（この軽量版には含まれていません）
     入っていないときは起動時に案内が出ます。次のページの「Windows App Runtime」の 2.5 以降を入れてください。
+    https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads
+"@
+
+$readmeEnFull = @"
+DotPixelPainter $version
+
+How to use
+  1. Put this folder anywhere you like
+  2. Run DotPixelPainter.exe
+
+  The app is not signed, so the first time you run it Windows may show "Windows protected your PC".
+  Click "More info" and then "Run anyway".
+
+  To open .dotpix files by double-clicking and to show their thumbnails in Explorer,
+  register them from the app's Help menu.
+  To uninstall, just delete this folder (settings are in %LOCALAPPDATA%\DotPixelPainter).
+
+  The app uses Japanese when Windows is set to Japanese, and English otherwise.
+  You can change this in Help > 言語 / Language.
+
+Requirements
+  Windows 11
+
+DotPixelPainter is released under the MIT License (LICENSE.txt).
+For the licenses of the software it uses, see THIRD-PARTY-NOTICES.md.
+https://github.com/Yocchan1513/DotPixelPainter
+"@
+
+$readmeEnLite = $readmeEnFull -replace 'Requirements\r?\n  Windows 11', @"
+Requirements
+  Windows 11
+  Windows App Runtime 2.5 or later (not included in this lite version)
+    If it is missing, the app tells you when it starts. Install "Windows App Runtime" 2.5 or later from:
     https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads
 "@
 
@@ -82,6 +116,7 @@ foreach ($rid in $Runtimes) {
         Copy-Item (Join-Path $root 'THIRD-PARTY-NOTICES.md') $out
         Copy-Item (Join-Path $root 'LICENSE') (Join-Path $out 'LICENSE.txt')
         Set-Content -Path (Join-Path $out 'はじめにお読みください.txt') -Value $(if ($lite) { $readmeLite } else { $readmeFull }) -Encoding utf8BOM
+        Set-Content -Path (Join-Path $out 'README.txt') -Value $(if ($lite) { $readmeEnLite } else { $readmeEnFull }) -Encoding utf8BOM
 
         $zip = "$out.zip"
         Compress-Archive -Path $out -DestinationPath $zip -CompressionLevel Optimal

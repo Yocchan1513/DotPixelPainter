@@ -12,11 +12,11 @@ public sealed partial class MainWindow
 {
     private static readonly (string Text, uint A, uint B)[] TransparencyPresets =
     [
-        ("市松模様（明るい）", 0xFFFFFFFF, 0xFFE8E8E8),
-        ("市松模様（暗い）", 0xFF3C3C3C, 0xFF2C2C2C),
-        ("白", 0xFFFFFFFF, 0xFFFFFFFF),
-        ("黒", 0xFF000000, 0xFF000000),
-        ("灰色", 0xFF808080, 0xFF808080),
+        (T("市松模様（明るい）", "Checkerboard (light)"), 0xFFFFFFFF, 0xFFE8E8E8),
+        (T("市松模様（暗い）", "Checkerboard (dark)"), 0xFF3C3C3C, 0xFF2C2C2C),
+        (T("白", "White"), 0xFFFFFFFF, 0xFFFFFFFF),
+        (T("黒", "Black"), 0xFF000000, 0xFF000000),
+        (T("灰色", "Gray"), 0xFF808080, 0xFF808080),
     ];
 
     /// <summary>下地の2色（同じなら単色）。</summary>
@@ -72,7 +72,7 @@ public sealed partial class MainWindow
     /// <summary>「表示」メニューに入れる、透明部分の表示の切り替え。</summary>
     private MenuFlyoutSubItem CreateTransparencyMenu()
     {
-        var menu = new MenuFlyoutSubItem { Text = "透明部分の表示" };
+        var menu = new MenuFlyoutSubItem { Text = T("透明部分の表示", "Transparency display") };
         foreach ((string text, uint a, uint b) in TransparencyPresets)
         {
             var item = new RadioMenuFlyoutItem { Text = text, GroupName = "transparent" };
@@ -80,7 +80,7 @@ public sealed partial class MainWindow
             menu.Items.Add(item);
         }
 
-        var backColor = new RadioMenuFlyoutItem { Text = "いまの背景色", GroupName = "transparent" };
+        var backColor = new RadioMenuFlyoutItem { Text = T("いまの背景色", "Current background color"), GroupName = "transparent" };
         backColor.Click += (_, _) => SetTransparency(_backColor, _backColor);
         menu.Items.Add(backColor);
         return menu;

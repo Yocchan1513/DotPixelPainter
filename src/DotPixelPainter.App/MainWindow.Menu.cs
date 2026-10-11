@@ -26,84 +26,85 @@ public sealed partial class MainWindow
         _menusBuilt = true;
 
         // ファイル
-        Add(FileMenu, "新規...", "Ctrl+N", () => ErrorLog.Run("新規作成", NewDocumentWithDialogAsync));
-        Add(FileMenu, "開く...", "Ctrl+O", () => ErrorLog.Run("開く", OpenAsync));
+        Add(FileMenu, T("新規...", "New..."), "Ctrl+N", () => ErrorLog.Run("新規作成", NewDocumentWithDialogAsync));
+        Add(FileMenu, T("開く...", "Open..."), "Ctrl+O", () => ErrorLog.Run("開く", OpenAsync));
         FileMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(FileMenu, "保存", "Ctrl+S", () => ErrorLog.Run("保存", SaveCurrentAsync));
-        Add(FileMenu, "別名で保存...", "Ctrl+Shift+S", () => ErrorLog.Run("別名で保存", SaveCurrentAsAsync));
-        Add(FileMenu, "拡大して書き出し...", null, () => ErrorLog.Run("拡大して書き出し", ExportScaledAsync));
+        Add(FileMenu, T("保存", "Save"), "Ctrl+S", () => ErrorLog.Run("保存", SaveCurrentAsync));
+        Add(FileMenu, T("別名で保存...", "Save as..."), "Ctrl+Shift+S", () => ErrorLog.Run("別名で保存", SaveCurrentAsAsync));
+        Add(FileMenu, T("拡大して書き出し...", "Export scaled..."), null, () => ErrorLog.Run("拡大して書き出し", ExportScaledAsync));
         FileMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(FileMenu, "タブを閉じる", "Ctrl+W", () =>
+        Add(FileMenu, T("タブを閉じる", "Close tab"), "Ctrl+W", () =>
         {
             if (Tabs.SelectedItem is TabViewItem item)
             {
                 ErrorLog.Run("タブを閉じる", () => CloseTabAsync(item));
             }
         });
-        Add(FileMenu, "終了", null, Close);
+        Add(FileMenu, T("終了", "Exit"), null, Close);
 
         // 編集
-        MenuFlyoutItem undo = Add(EditMenu, "元に戻す", "Ctrl+Z", Undo);
-        MenuFlyoutItem redo = Add(EditMenu, "やり直し", "Ctrl+Y", Redo);
+        MenuFlyoutItem undo = Add(EditMenu, T("元に戻す", "Undo"), "Ctrl+Z", Undo);
+        MenuFlyoutItem redo = Add(EditMenu, T("やり直し", "Redo"), "Ctrl+Y", Redo);
         SyncEnabled(UndoButton, undo);
         SyncEnabled(RedoButton, redo);
         EditMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(EditMenu, "切り取り", "Ctrl+X", () => ErrorLog.Run("切り取り", () => CopyAsync(cut: true)));
-        Add(EditMenu, "コピー", "Ctrl+C", () => ErrorLog.Run("コピー", () => CopyAsync(cut: false)));
-        Add(EditMenu, "貼り付け", "Ctrl+V", () => ErrorLog.Run("貼り付け", PasteAsync));
+        Add(EditMenu, T("切り取り", "Cut"), "Ctrl+X", () => ErrorLog.Run("切り取り", () => CopyAsync(cut: true)));
+        Add(EditMenu, T("コピー", "Copy"), "Ctrl+C", () => ErrorLog.Run("コピー", () => CopyAsync(cut: false)));
+        Add(EditMenu, T("貼り付け", "Paste"), "Ctrl+V", () => ErrorLog.Run("貼り付け", PasteAsync));
 
         // 画像
-        Add(ImageMenu, "画像の大きさ...", null, () => ErrorLog.Run("画像の大きさ", ShowScaleDialogAsync));
-        Add(ImageMenu, "キャンバスの大きさ...", null, () => ErrorLog.Run("キャンバスの大きさ", ShowCanvasSizeDialogAsync));
-        Add(ImageMenu, "選択範囲で切り抜く", null, () =>
+        Add(ImageMenu, T("画像の大きさ...", "Image size..."), null, () => ErrorLog.Run("画像の大きさ", ShowScaleDialogAsync));
+        Add(ImageMenu, T("キャンバスの大きさ...", "Canvas size..."), null, () => ErrorLog.Run("キャンバスの大きさ", ShowCanvasSizeDialogAsync));
+        Add(ImageMenu, T("選択範囲で切り抜く", "Crop to selection"), null, () =>
         {
             if (CurrentTab is { Selection: null })
             {
-                ErrorLog.Run("切り抜き", () => ShowMessageAsync("切り抜けません", "先に、選択ツールで残したい範囲を選んでください。"));
+                ErrorLog.Run("切り抜き", () => ShowMessageAsync(T("切り抜けません", "Cannot crop"), T("先に、選択ツールで残したい範囲を選んでください。", "First select the area to keep with the selection tool.")));
                 return;
             }
 
             CropToSelection();
         });
         ImageMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(ImageMenu, "左右反転", null, () => ImageAction(d => d.FlipImage(horizontal: true)));
-        Add(ImageMenu, "上下反転", null, () => ImageAction(d => d.FlipImage(horizontal: false)));
-        Add(ImageMenu, "右に90°回転", null, () => ImageAction(d => d.RotateImage(clockwise: true)));
-        Add(ImageMenu, "左に90°回転", null, () => ImageAction(d => d.RotateImage(clockwise: false)));
+        Add(ImageMenu, T("左右反転", "Flip horizontal"), null, () => ImageAction(d => d.FlipImage(horizontal: true)));
+        Add(ImageMenu, T("上下反転", "Flip vertical"), null, () => ImageAction(d => d.FlipImage(horizontal: false)));
+        Add(ImageMenu, T("右に90°回転", "Rotate 90° right"), null, () => ImageAction(d => d.RotateImage(clockwise: true)));
+        Add(ImageMenu, T("左に90°回転", "Rotate 90° left"), null, () => ImageAction(d => d.RotateImage(clockwise: false)));
         ImageMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(ImageMenu, "色の置き換え...", null, () => ErrorLog.Run("色の置き換え", ShowReplaceColorDialogAsync));
-        Add(ImageMenu, "減色...", null, () => ErrorLog.Run("減色", ShowReduceColorsDialogAsync));
-        Add(ImageMenu, "使っている色をパレットに取り込む...", null, () => ErrorLog.Run("パレットに取り込む", ImportUsedColorsAsync));
+        Add(ImageMenu, T("色の置き換え...", "Replace color..."), null, () => ErrorLog.Run("色の置き換え", ShowReplaceColorDialogAsync));
+        Add(ImageMenu, T("減色...", "Reduce colors..."), null, () => ErrorLog.Run("減色", ShowReduceColorsDialogAsync));
+        Add(ImageMenu, T("使っている色をパレットに取り込む...", "Add used colors to palette..."), null, () => ErrorLog.Run("パレットに取り込む", ImportUsedColorsAsync));
         ImageMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(ImageMenu, "線の整形（角の余分な1ドットを消す）", null, CleanupLines);
+        Add(ImageMenu, T("線の整形（角の余分な1ドットを消す）", "Clean up lines (remove extra corner pixels)"), null, CleanupLines);
 
         // 選択範囲
-        Add(SelectMenu, "すべて選択", "Ctrl+A", SelectAll);
-        Add(SelectMenu, "選択を解除", "Ctrl+D", Deselect);
+        Add(SelectMenu, T("すべて選択", "Select all"), "Ctrl+A", SelectAll);
+        Add(SelectMenu, T("選択を解除", "Deselect"), "Ctrl+D", Deselect);
         SelectMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(SelectMenu, "左右反転", "Shift+H", FlipSelectionHorizontal);
-        Add(SelectMenu, "上下反転", "Shift+V", FlipSelectionVertical);
-        Add(SelectMenu, "右に90°回転", "Shift+R", () => RotateSelection(clockwise: true));
-        Add(SelectMenu, "左に90°回転", "Shift+L", () => RotateSelection(clockwise: false));
+        Add(SelectMenu, T("左右反転", "Flip horizontal"), "Shift+H", FlipSelectionHorizontal);
+        Add(SelectMenu, T("上下反転", "Flip vertical"), "Shift+V", FlipSelectionVertical);
+        Add(SelectMenu, T("右に90°回転", "Rotate 90° right"), "Shift+R", () => RotateSelection(clockwise: true));
+        Add(SelectMenu, T("左に90°回転", "Rotate 90° left"), "Shift+L", () => RotateSelection(clockwise: false));
 
         // レイヤー
-        Add(LayerMenu, "新しいレイヤー", null, () => LayerAdd_Click(this, new RoutedEventArgs()));
-        Add(LayerMenu, "レイヤーを複製", null, () => LayerDuplicate_Click(this, new RoutedEventArgs()));
+        Add(LayerMenu, T("新しいレイヤー", "New layer"), null, () => LayerAdd_Click(this, new RoutedEventArgs()));
+        Add(LayerMenu, T("レイヤーを複製", "Duplicate layer"), null, () => LayerDuplicate_Click(this, new RoutedEventArgs()));
         LayerMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(LayerMenu, "1つ上へ", null, () => LayerUp_Click(this, new RoutedEventArgs()));
-        Add(LayerMenu, "1つ下へ", null, () => LayerDown_Click(this, new RoutedEventArgs()));
+        Add(LayerMenu, T("1つ上へ", "Move up"), null, () => LayerUp_Click(this, new RoutedEventArgs()));
+        Add(LayerMenu, T("1つ下へ", "Move down"), null, () => LayerDown_Click(this, new RoutedEventArgs()));
         LayerMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(LayerMenu, "下のレイヤーと結合", null, () => LayerMerge_Click(this, new RoutedEventArgs()));
-        Add(LayerMenu, "レイヤーを削除", null, () => LayerDelete_Click(this, new RoutedEventArgs()));
+        Add(LayerMenu, T("下のレイヤーと結合", "Merge down"), null, () => LayerMerge_Click(this, new RoutedEventArgs()));
+        Add(LayerMenu, T("レイヤーを削除", "Delete layer"), null, () => LayerDelete_Click(this, new RoutedEventArgs()));
 
         // 表示
-        Add(ViewMenu, "拡大", null, () => ZoomAtCenter(1));
-        Add(ViewMenu, "縮小", null, () => ZoomAtCenter(-1));
+        Add(ViewMenu, T("拡大", "Zoom in"), null, () => ZoomAtCenter(1));
+        Add(ViewMenu, T("縮小", "Zoom out"), null, () => ZoomAtCenter(-1));
         ViewMenu.Items.Add(new MenuFlyoutSeparator());
-        AddToggle(ViewMenu, "グリッド", GridToggle, () => RedrawAll());
-        AddToggle(ViewMenu, "左右反転表示", FlipToggle, () => RedrawAll());
-        AddToggle(ViewMenu, "スキンとして編集", SkinToggle, () => SkinToggle_Click(SkinToggle, new RoutedEventArgs()));
-        AddToggle(ViewMenu, "右のパネル", PanelToggle, () => PanelToggle_Click(PanelToggle, new RoutedEventArgs()));
+        AddToggle(ViewMenu, T("グリッド", "Grid"), GridToggle, () => RedrawAll());
+        AddToggle(ViewMenu, T("左右反転表示", "Mirror view"), FlipToggle, () => RedrawAll());
+        AddToggle(ViewMenu, T("スキンとして編集", "Edit as skin"), SkinToggle, () => SkinToggle_Click(SkinToggle, new RoutedEventArgs()));
+        AddToggle(ViewMenu, T("右のパネル", "Right panel"), PanelToggle, () => PanelToggle_Click(PanelToggle, new RoutedEventArgs()));
+        AddToggle(ViewMenu, T("画面を分割（資料を表示）", "Split view (show a reference)"), SplitToggle, () => SetSplit(SplitToggle.IsChecked == true));
         ViewMenu.Items.Add(new MenuFlyoutSeparator());
         _transparencyMenu = CreateTransparencyMenu();
         UpdateTransparencyMenu(_transparencyMenu);
@@ -112,18 +113,19 @@ public sealed partial class MainWindow
         // ヘルプ（設定もここに置く）
         _associationItem = Add(HelpMenu, "", null, () => ErrorLog.Run("関連付け", ToggleAssociationAsync));
         UpdateAssociationItem();
-        _restoreItem = new ToggleMenuFlyoutItem { Text = "起動時に前回のタブを開き直す", IsChecked = _restoreSession };
+        _restoreItem = new ToggleMenuFlyoutItem { Text = T("起動時に前回のタブを開き直す", "Reopen last tabs at startup"), IsChecked = _restoreSession };
         _restoreItem.Click += (_, _) => _restoreSession = _restoreItem.IsChecked;
         HelpMenu.Items.Add(_restoreItem);
+        HelpMenu.Items.Add(CreateLanguageMenu());
         HelpMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(HelpMenu, "エラーの記録があるフォルダを開く", null, () =>
+        Add(HelpMenu, T("エラーの記録があるフォルダを開く", "Open the error log folder"), null, () =>
         {
             string folder = Path.GetDirectoryName(ErrorLog.FilePath)!;
             Directory.CreateDirectory(folder);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(folder) { UseShellExecute = true });
         });
         HelpMenu.Items.Add(new MenuFlyoutSeparator());
-        Add(HelpMenu, "バージョン情報", null, () => ErrorLog.Run("バージョン情報", ShowAboutAsync));
+        Add(HelpMenu, T("バージョン情報", "About"), null, () => ErrorLog.Run("バージョン情報", ShowAboutAsync));
     }
 
     private static MenuFlyoutItem Add(MenuBarItem menu, string text, string? keys, Action action)
@@ -165,8 +167,8 @@ public sealed partial class MainWindow
         if (_associationItem is not null)
         {
             _associationItem.Text = FileAssociation.IsRegistered()
-                ? ".dotpix の関連付けを解除する"
-                : ".dotpix をダブルクリックでこのアプリで開くようにする";
+                ? T(".dotpix の関連付けを解除する", "Remove the .dotpix file association")
+                : T(".dotpix をこのアプリで開くようにする（サムネイルも表示）", "Open .dotpix files with this app (and show thumbnails)");
         }
     }
 }

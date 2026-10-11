@@ -81,8 +81,15 @@ public sealed class UndoHistory
 
     public void MarkSaved() => _savedPosition = _position;
 
+    /// <summary>「保存していない」状態にする（控えから復元したときなど）。</summary>
+    public void MarkUnsaved() => _savedPosition = -1;
+
+    /// <summary>内容が変わるたびに増える番号（操作・元に戻す・やり直しのどれでも）。自動の控えを取り直すかの判断に使う。</summary>
+    public int Revision { get; private set; }
+
     internal void Push(HistoryEntry edit)
     {
+        Revision++;
         // やり直し待ちの操作は捨てる
         if (_position < _edits.Count)
         {
@@ -124,6 +131,8 @@ public sealed class UndoHistory
             return false;
         }
 
+        Revision++;
+
         _position--;
         _edits[_position].Apply(undo: true);
         return true;
@@ -135,6 +144,8 @@ public sealed class UndoHistory
         {
             return false;
         }
+
+        Revision++;
 
         _edits[_position].Apply(undo: false);
         _position++;

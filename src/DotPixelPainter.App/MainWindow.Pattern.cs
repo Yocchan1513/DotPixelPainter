@@ -55,6 +55,6 @@ public sealed partial class MainWindow
     private void PatternGap_Click(object sender, RoutedEventArgs e) => UpdateStatus(null);
 
     private string PatternStatus() => PatternBox?.SelectedIndex > 0 && PatternBox.SelectedItem is ComboBoxItem { Content: string name }
-        ? $"・パターン {name}{(PatternGapBox.IsChecked == true ? "（すき間は背景色）" : "")}"
+        ? T($"・パターン {name}", $" · Pattern {name}") + (PatternGapBox.IsChecked == true ? T("（すき間は背景色）", " (gaps: background color)") : "")
         : "";
 }

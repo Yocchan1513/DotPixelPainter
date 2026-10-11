@@ -12,3 +12,12 @@ public sealed partial class ResizeGrip : Grid
         ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeNorthSouth);
     }
 }
+
+/// <summary>左右にドラッグして幅を変えるつまみ。マウスを乗せると左右矢印のカーソルになる。</summary>
+public sealed partial class SideResizeGrip : Grid
+{
+    public SideResizeGrip()
+    {
+        ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+    }
+}

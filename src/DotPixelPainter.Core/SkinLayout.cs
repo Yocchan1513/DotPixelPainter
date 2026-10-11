@@ -58,22 +58,22 @@ public static class SkinLayout
 
     public static string PartName(SkinPart part) => part switch
     {
-        SkinPart.Head => "頭",
-        SkinPart.Body => "体",
-        SkinPart.RightArm => "右腕",
-        SkinPart.LeftArm => "左腕",
-        SkinPart.RightLeg => "右脚",
-        _ => "左脚",
+        SkinPart.Head => T("頭", "Head"),
+        SkinPart.Body => T("体", "Body"),
+        SkinPart.RightArm => T("右腕", "Right arm"),
+        SkinPart.LeftArm => T("左腕", "Left arm"),
+        SkinPart.RightLeg => T("右脚", "Right leg"),
+        _ => T("左脚", "Left leg"),
     };
 
     public static string FaceName(SkinFace face) => face switch
     {
-        SkinFace.Top => "上",
-        SkinFace.Bottom => "下",
-        SkinFace.Right => "右",
-        SkinFace.Front => "前",
-        SkinFace.Left => "左",
-        _ => "後",
+        SkinFace.Top => T("上", "Top"),
+        SkinFace.Bottom => T("下", "Bottom"),
+        SkinFace.Right => T("右", "Right"),
+        SkinFace.Front => T("前", "Front"),
+        SkinFace.Left => T("左", "Left"),
+        _ => T("後", "Back"),
     };
 
     /// <summary>すべての箱。legacy は 64×32 の旧形式（外側は頭だけ、左腕・左脚は右側の反転）。</summary>

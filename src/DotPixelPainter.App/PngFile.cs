@@ -20,22 +20,42 @@ public static class PngFile
         return document;
     }
 
-    /// <summary>OS が読める画像（PNG・BMP・JPEG など。クリップボードの画像も）を1枚の画像にする。</summary>
-    public static async Task<PixelImage> DecodeAsync(IRandomAccessStream stream)
+    /// <summary>
+    /// OS が読める画像（PNG・BMP・JPEG など。クリップボードの画像も）を1枚の画像にする。
+    /// forReference なら（分割画面の資料用）、大きすぎる画像は縮めて読み、縮めないときは写真の向き（EXIF）にも合わせる。
+    /// </summary>
+    public static async Task<PixelImage> DecodeAsync(IRandomAccessStream stream, bool forReference = false)
     {
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-        if (decoder.PixelWidth > PixelImage.MaxSize || decoder.PixelHeight > PixelImage.MaxSize)
+        bool tooLarge = decoder.PixelWidth > PixelImage.MaxSize || decoder.PixelHeight > PixelImage.MaxSize;
+
+        // 写真の向きに合わせるのは、縮めないときだけ（縮めるときに向きも変えると、幅と高さの扱いがあいまいになるため）
+        bool orient = forReference && !tooLarge;
+        uint width = orient ? decoder.OrientedPixelWidth : decoder.PixelWidth;
+        uint height = orient ? decoder.OrientedPixelHeight : decoder.PixelHeight;
+        var transform = new BitmapTransform();
+        if (tooLarge)
         {
-            throw new InvalidOperationException($"画像が大きすぎます（{decoder.PixelWidth}×{decoder.PixelHeight}）。{PixelImage.MaxSize}×{PixelImage.MaxSize} までに対応しています。");
+            if (!forReference)
+            {
+                throw new InvalidOperationException(T($"画像が大きすぎます（{decoder.PixelWidth}×{decoder.PixelHeight}）。{PixelImage.MaxSize}×{PixelImage.MaxSize} までに対応しています。", $"The image is too large ({decoder.PixelWidth}×{decoder.PixelHeight}). Up to {PixelImage.MaxSize}×{PixelImage.MaxSize} is supported."));
+            }
+
+            double scale = (double)PixelImage.MaxSize / Math.Max(width, height);
+            width = Math.Max(1, (uint)(width * scale));
+            height = Math.Max(1, (uint)(height * scale));
+            transform.ScaledWidth = width;
+            transform.ScaledHeight = height;
+            transform.InterpolationMode = BitmapInterpolationMode.Fant;
         }
 
         PixelDataProvider data = await decoder.GetPixelDataAsync(
             BitmapPixelFormat.Bgra8,
             BitmapAlphaMode.Straight,
-            new BitmapTransform(),
-            ExifOrientationMode.IgnoreExifOrientation,
+            transform,
+            orient ? ExifOrientationMode.RespectExifOrientation : ExifOrientationMode.IgnoreExifOrientation,
             ColorManagementMode.DoNotColorManage);
-        var image = new PixelImage((int)decoder.PixelWidth, (int)decoder.PixelHeight);
+        var image = new PixelImage((int)width, (int)height);
         image.LoadFromBgra(data.DetachPixelData());
         return image;
     }

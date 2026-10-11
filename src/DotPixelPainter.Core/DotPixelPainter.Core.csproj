@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,6 +9,11 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="DotPixelPainter.Core.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 画面の文字は T("日本語", "English") で書く（Lang.cs） -->
+    <Using Include="DotPixelPainter.Core.Lang" Static="true" />
   </ItemGroup>
 
 </Project>

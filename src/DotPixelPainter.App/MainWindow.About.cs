@@ -16,10 +16,10 @@ public sealed partial class MainWindow
 
     private async Task ShowAboutAsync()
     {
-        var status = new TextBlock { Text = "最新バージョンを確認しています…", TextWrapping = TextWrapping.Wrap };
+        var status = new TextBlock { Text = T("最新バージョンを確認しています…", "Checking for the latest version…"), TextWrapping = TextWrapping.Wrap };
         var download = new HyperlinkButton
         {
-            Content = "ダウンロードのページを開く",
+            Content = T("ダウンロードのページを開く", "Open the download page"),
             NavigateUri = new Uri(ReleasesUrl),
             Padding = new Thickness(0),
             Visibility = Visibility.Collapsed,
@@ -27,8 +27,8 @@ public sealed partial class MainWindow
 
         var text = new StackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
         text.Children.Add(new TextBlock { Text = "DotPixelPainter", FontSize = 20, FontWeight = FontWeights.SemiBold });
-        text.Children.Add(new TextBlock { Text = $"バージョン {AppVersion.TrimStart('v')}" });
-        text.Children.Add(new TextBlock { Text = "ドット絵とMinecraftスキンのためのお絵かきソフト", TextWrapping = TextWrapping.Wrap });
+        text.Children.Add(new TextBlock { Text = T($"バージョン {AppVersion.TrimStart('v')}", $"Version {AppVersion.TrimStart('v')}") });
+        text.Children.Add(new TextBlock { Text = T("ドット絵とMinecraftスキンのためのお絵かきソフト", "A pixel art and Minecraft skin editor"), TextWrapping = TextWrapping.Wrap });
         text.Children.Add(new TextBlock { Text = "© 2026 Yocchan1513　MIT License", FontSize = 12, Opacity = 0.8 });
         text.Children.Add(status);
         text.Children.Add(download);
@@ -74,16 +74,16 @@ public sealed partial class MainWindow
             if (!Version.TryParse(text.Trim().TrimStart('v'), out Version? latest)
                 || !Version.TryParse(AppVersion.TrimStart('v'), out Version? current))
             {
-                return ("最新バージョンを確認できませんでした。", false);
+                return (T("最新バージョンを確認できませんでした。", "Could not check for the latest version."), false);
             }
 
             return latest > current
-                ? ($"新しいバージョン {latest} があります。", true)
-                : ("最新バージョンを使用しています。", false);
+                ? (T($"新しいバージョン {latest} があります。", $"A new version {latest} is available."), true)
+                : (T("最新バージョンを使用しています。", "You are using the latest version."), false);
         }
         catch (Exception)
         {
-            return ("最新バージョンを確認できませんでした。", false);
+            return (T("最新バージョンを確認できませんでした。", "Could not check for the latest version."), false);
         }
     }
 }

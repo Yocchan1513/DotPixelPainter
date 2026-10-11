@@ -42,7 +42,7 @@ public sealed partial class MainWindow
                 Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
                 Child = new FontIcon { Glyph = layer.Visible ? VisibleGlyph : HiddenGlyph, FontSize = 13 },
             };
-            ToolTipService.SetToolTip(eye, layer.Visible ? "非表示にする" : "表示する");
+            ToolTipService.SetToolTip(eye, layer.Visible ? T("非表示にする", "Hide") : T("表示する", "Show"));
             eye.Tapped += (_, e) =>
             {
                 CommitFloating(tab);
@@ -82,7 +82,7 @@ public sealed partial class MainWindow
             row.Children.Add(eye);
             row.Children.Add(name);
             row.Children.Add(opacity);
-            ToolTipService.SetToolTip(row, "クリックで選択、ダブルクリックで名前を変更");
+            ToolTipService.SetToolTip(row, T("クリックで選択、ダブルクリックで名前を変更", "Click to select, double-click to rename"));
 
             row.Tapped += (_, _) =>
             {
@@ -103,7 +103,7 @@ public sealed partial class MainWindow
 
         _syncingLayerUi = true;
         LayerOpacitySlider.Value = Math.Round(document.ActiveLayer.Opacity * 100);
-        LayerOpacityText.Text = $"不透明度 {LayerOpacitySlider.Value}%";
+        LayerOpacityText.Text = T($"不透明度 {LayerOpacitySlider.Value}%", $"Opacity {LayerOpacitySlider.Value}%");
         _syncingLayerUi = false;
     }
 
@@ -113,10 +113,10 @@ public sealed partial class MainWindow
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = "レイヤー名の変更",
+            Title = T("レイヤー名の変更", "Rename layer"),
             Content = box,
-            PrimaryButtonText = "変更",
-            CloseButtonText = "キャンセル",
+            PrimaryButtonText = T("変更", "Change"),
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         dialog.Opened += (_, _) =>
@@ -164,7 +164,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        LayerOpacityText.Text = $"不透明度 {e.NewValue}%";
+        LayerOpacityText.Text = T($"不透明度 {e.NewValue}%", $"Opacity {e.NewValue}%");
         CommitFloating(tab);
         PixelDocument document = tab.Document;
         document.SetLayerOpacity(document.ActiveLayerIndex, e.NewValue / 100.0);

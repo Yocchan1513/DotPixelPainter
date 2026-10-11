@@ -18,7 +18,7 @@ public sealed partial class MainWindow
         if (e.DataView.Contains(StandardDataFormats.StorageItems))
         {
             e.AcceptedOperation = DataPackageOperation.Copy;
-            e.DragUIOverride.Caption = "開く";
+            e.DragUIOverride.Caption = T("開く", "Open");
         }
     }
 
@@ -54,8 +54,8 @@ public sealed partial class MainWindow
             if (skipped.Count > 0)
             {
                 await ShowMessageAsync(
-                    "開けないファイルがありました",
-                    $"開けるのは .dotpix・.png・.psd のファイルです。\n\n{string.Join("\n", skipped)}");
+                    T("開けないファイルがありました", "Some files could not be opened"),
+                    T("開けるのは .dotpix・.png・.psd のファイルです。", "Only .dotpix, .png and .psd files can be opened.") + "\n\n" + string.Join("\n", skipped));
             }
         });
     }

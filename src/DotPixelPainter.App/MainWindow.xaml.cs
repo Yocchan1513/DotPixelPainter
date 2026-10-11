@@ -80,10 +80,12 @@ public sealed partial class MainWindow : Window
         // 終了時に開いていたファイルを覚える（計測やテストで起動したときは、本来の記録を上書きしない）
         Closed += (_, _) =>
         {
-            if (ShouldRestoreSession() || _probe.FilesToOpen.Count > 0)
+            if (!_probe.Isolated && (ShouldRestoreSession() || _probe.FilesToOpen.Count > 0))
             {
                 SaveSession();
             }
+
+            EndRecovery();
         };
         InitializePanels();
         AddTab(CreateUntitled());
@@ -130,7 +132,7 @@ public sealed partial class MainWindow : Window
     private PixelDocument CreateUntitled(int width, int height, bool whiteBackground)
     {
         _untitledCount++;
-        var document = new PixelDocument($"無題 {_untitledCount}", width, height);
+        var document = new PixelDocument(T($"無題 {_untitledCount}", $"Untitled {_untitledCount}"), width, height);
         if (whiteBackground)
         {
             document.ActiveLayer.Image.Fill(0xFFFFFFFF);
@@ -146,6 +148,7 @@ public sealed partial class MainWindow : Window
         _tabs[item] = tab;
         Tabs.TabItems.Add(item);
         Tabs.SelectedItem = item;
+        RefreshReferenceChoices();
     }
 
     /// <summary>このファイルを開いているタブ。保存先が同じか、保存前の PSD などの読み込み元が同じものを探す。</summary>
@@ -174,6 +177,7 @@ public sealed partial class MainWindow : Window
             }
         }
 
+        RefreshReferenceChoices(); // 名前が変わったときのため（変わっていなければ何もしない）
         UpdateWindowTitle();
     }
 
@@ -206,11 +210,11 @@ public sealed partial class MainWindow : Window
             var dialog = new ContentDialog
             {
                 XamlRoot = Root.XamlRoot,
-                Title = $"「{tab.Document.Name}」は保存されていません",
-                Content = "閉じる前に保存しますか？",
-                PrimaryButtonText = "保存",
-                SecondaryButtonText = "保存しない",
-                CloseButtonText = "キャンセル",
+                Title = T($"「{tab.Document.Name}」は保存されていません", $"\"{tab.Document.Name}\" has not been saved"),
+                Content = T("閉じる前に保存しますか？", "Do you want to save before closing?"),
+                PrimaryButtonText = T("保存", "Save"),
+                SecondaryButtonText = T("保存しない", "Don't save"),
+                CloseButtonText = T("キャンセル", "Cancel"),
                 DefaultButton = ContentDialogButton.Primary,
             };
             ContentDialogResult result = await dialog.ShowAsync();
@@ -227,6 +231,8 @@ public sealed partial class MainWindow : Window
 
         Tabs.TabItems.Remove(item);
         _tabs.Remove(item);
+        ForgetClosedReference();
+        ForgetBackup(tab);
         if (_bitmapOwner == tab)
         {
             _bitmap?.Dispose();
@@ -276,10 +282,10 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = "保存されていないタブがあります",
-            Content = "保存せずに終了しますか？",
-            PrimaryButtonText = "終了する",
-            CloseButtonText = "キャンセル",
+            Title = T("保存されていないタブがあります", "Some tabs have not been saved"),
+            Content = T("保存せずに終了しますか？", "Exit without saving?"),
+            PrimaryButtonText = T("終了する", "Exit"),
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
@@ -398,6 +404,8 @@ public sealed partial class MainWindow : Window
 
     private void AfterHistoryChange(DocumentTab tab)
     {
+        ScheduleAutosave();
+        RefreshReferenceView();
         tab.ImageChanged = true;
         if (tab.ShownSize != (tab.Document.Width, tab.Document.Height))
         {
@@ -447,7 +455,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("開けませんでした", ex.Message);
+            await ShowMessageAsync(T("開けませんでした", "Could not open the file"), ex.Message);
         }
     }
 
@@ -470,7 +478,7 @@ public sealed partial class MainWindow : Window
 
         if (warnings.Count > 0)
         {
-            await ShowMessageAsync("読み込みについて", string.Join("\n\n", warnings));
+            await ShowMessageAsync(T("読み込みについて", "About this file"), string.Join("\n\n", warnings));
         }
     }
 
@@ -500,7 +508,7 @@ public sealed partial class MainWindow : Window
             {
                 if (reportErrors)
                 {
-                    await ShowMessageAsync("開けませんでした", $"{path}\n{ex.Message}");
+                    await ShowMessageAsync(T("開けませんでした", "Could not open the file"), $"{path}\n{ex.Message}");
                 }
             }
         }
@@ -585,8 +593,8 @@ public sealed partial class MainWindow : Window
         {
             var picker = new FileSavePicker { SuggestedFileName = Path.GetFileNameWithoutExtension(document.Name) };
             InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
-            picker.FileTypeChoices.Add("DotPixelPainter（レイヤーを残す）", [DotPixFile.Extension]);
-            picker.FileTypeChoices.Add("PNG 画像（1枚にまとめる）", [".png"]);
+            picker.FileTypeChoices.Add(T("DotPixelPainter（レイヤーを残す）", "DotPixelPainter (keeps layers)"), [DotPixFile.Extension]);
+            picker.FileTypeChoices.Add(T("PNG 画像（1枚にまとめる）", "PNG image (flattened)"), [".png"]);
             file = await picker.PickSaveFileAsync();
             if (file is null)
             {
@@ -623,7 +631,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            await ShowMessageAsync("保存できませんでした", ex.Message);
+            await ShowMessageAsync(T("保存できませんでした", "Could not save"), ex.Message);
             return false;
         }
 
@@ -640,10 +648,10 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = "PNG ではレイヤーが1枚にまとまります",
-            Content = "表示中のレイヤーを重ねた見た目で保存します。レイヤーを残したいときは .dotpix で保存してください。\n（アプリの中のレイヤーはそのまま残ります）",
-            PrimaryButtonText = "PNG で保存",
-            CloseButtonText = "キャンセル",
+            Title = T("PNG ではレイヤーが1枚にまとまります", "PNG flattens the layers"),
+            Content = T("表示中のレイヤーを重ねた見た目で保存します。レイヤーを残したいときは .dotpix で保存してください。\n（アプリの中のレイヤーはそのまま残ります）", "The visible layers are saved as one image. To keep the layers, save as .dotpix.\n(The layers in the app are not changed.)"),
+            PrimaryButtonText = T("PNG で保存", "Save as PNG"),
+            CloseButtonText = T("キャンセル", "Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
@@ -798,7 +806,7 @@ public sealed partial class MainWindow : Window
         if (zoomWasUnset)
         {
             // 倍率が決まったので表示を更新する（描画中は文字を変えず、終わってから）
-            DispatcherQueue.TryEnqueue(() => UpdateStatus(null));
+            DispatcherQueue.Post("状態の表示", () => UpdateStatus(null));
         }
 
         var rect = new Rect(ox / scale, oy / scale, document.Width * tab.Zoom / scale, document.Height * tab.Zoom / scale);
@@ -830,7 +838,7 @@ public sealed partial class MainWindow : Window
         {
             _firstFrameReported = true;
             _probe.Mark("first-draw");
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            DispatcherQueue.Post("起動後の準備", priority: Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, action: () =>
             {
                 if (_probe.ReportFirstFrame())
                 {
@@ -844,6 +852,7 @@ public sealed partial class MainWindow : Window
                 _restoreSession = LoadSession().Restore;
                 BuildMenus();
                 AddPatternItems();
+                StartRecovery();
                 PixelPerfectBox.IsChecked = ViewSettings.Get("pixel-perfect") == "on";
                 if (_probe.FilesToOpen.Count > 0)
                 {
@@ -911,6 +920,46 @@ public sealed partial class MainWindow : Window
                         SkinToggle.IsChecked = true;
                         SkinToggle_Click(SkinToggle, new RoutedEventArgs());
                     });
+                }
+                else if (_probe.TestOpen == "split")
+                {
+                    ErrorLog.Run("分割（テスト）", async () =>
+                    {
+                        await _startupOpen;
+                        SetSplit(true);
+                    });
+                }
+                else if (_probe.TestOpen is "crash" or "crash-hard" && CurrentTab is { } crashTab)
+                {
+                    // 絵を描いた（保存していない）状態にしてから、わざと想定外のエラーを起こす。
+                    // crash: 画面の部品のイベントの中のエラー（受け止めて続ける）。crash-hard: 受け止められないエラー（落ちる）
+                    PixelStroke fill = crashTab.Document.BeginStroke();
+                    fill.FloodFill(0, 0, 0xFF3060C0);
+                    fill.Commit();
+                    AfterHistoryChange(crashTab);
+                    if (_probe.TestOpen == "crash")
+                    {
+                        EventHandler<object>? once = null;
+                        once = (_, _) =>
+                        {
+                            Root.LayoutUpdated -= once;
+                            throw new InvalidOperationException("テスト用のエラー（続けられる）");
+                        };
+                        Root.LayoutUpdated += once;
+                        Root.InvalidateArrange();
+                    }
+                    else
+                    {
+                        // 描いてから5秒後に落ちる（そのあいだに自動の控えが取られるはず）
+                        var later = DispatcherQueue.CreateTimer();
+                        later.Interval = TimeSpan.FromSeconds(5);
+                        later.Tick += (_, _) => throw new InvalidOperationException("テスト用のエラー（落ちる）");
+                        later.Start();
+                    }
+                }
+                else if (_probe.TestOpen == "restore")
+                {
+                    ErrorLog.Run("控えの復元（テスト）", () => RestoreBackupsAsync(Recovery.List()));
                 }
                 else if (_probe.TestOpen == "rotate")
                 {
@@ -1186,6 +1235,8 @@ public sealed partial class MainWindow : Window
         RefreshHeader(_strokeTab);
         _stroke = null;
         _pixelPath = null;
+        RefreshReferenceView();
+        ScheduleAutosave();
         _strokeTab = null;
         UpdateUndoButtons();
     }
@@ -1283,7 +1334,7 @@ public sealed partial class MainWindow : Window
         ZoomText.Text = $"{tab.Zoom * 100}%";
         string pos = position is { } p && tab.Document.ActiveLayer.Image.Contains(p.X, p.Y) ? $"{p.X}, {p.Y}" : "-";
         string skin = IsSkinTab(tab) && SkinStatus() is { Length: > 0 } part ? $"　｜　{part}" : "";
-        StatusText.Text = $"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{PatternStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}";
+        StatusText.Text = T($"{tab.Document.Width} × {tab.Document.Height}　｜　倍率 {tab.Zoom * 100}%　｜　座標 {pos}{skin}　｜　{ToolStatus()}{PatternStatus()}{MaskStatus()}　｜　{tab.Document.ActiveLayer.Name}", $"{tab.Document.Width} × {tab.Document.Height}   |   Zoom {tab.Zoom * 100}%   |   Position {pos}{skin}   |   {ToolStatus()}{PatternStatus()}{MaskStatus()}   |   {tab.Document.ActiveLayer.Name}");
     }
 
     private static Color ToColor(uint argb) =>

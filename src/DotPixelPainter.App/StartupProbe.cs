@@ -32,6 +32,12 @@ public sealed class StartupProbe
     /// <summary>起動時に渡されたファイル（.dotpix / .png）。最初の描画のあとに開く。</summary>
     public IReadOnlyList<string> FilesToOpen { get; private init; } = [];
 
+    /// <summary>
+    /// 開発用の起動（`--isolated` か計測）。起動中のアプリにファイルを渡さず、
+    /// 作業の控え・起動の印・前回のタブの記録にも触らない（利用者のアプリや記録を乱さないため）。
+    /// </summary>
+    public bool Isolated { get; private init; }
+
     public static StartupProbe Current { get; } = FromCommandLine();
 
     public string? LogPath { get; }
@@ -44,12 +50,17 @@ public sealed class StartupProbe
         string? logPath = null;
         string? testOpen = null;
         bool exit = false;
+        bool isolated = false;
         var files = new List<string>();
         for (int i = 1; i < args.Length; i++)
         {
             if (args[i] == "--startup-log" && i + 1 < args.Length)
             {
                 logPath = args[++i];
+            }
+            else if (args[i] == "--isolated")
+            {
+                isolated = true;
             }
             else if (args[i] == "--exit-after-startup")
             {
@@ -65,7 +76,11 @@ public sealed class StartupProbe
             }
         }
 
-        return new StartupProbe(logPath, exit, testOpen) { FilesToOpen = files };
+        return new StartupProbe(logPath, exit, testOpen)
+        {
+            FilesToOpen = files,
+            Isolated = isolated || logPath is not null,
+        };
     }
 
     /// <summary>起動途中の区切りを記録する。計測していないときは何もしない。</summary>

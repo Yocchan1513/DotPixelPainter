@@ -21,18 +21,15 @@ public sealed partial class MainWindow
     private readonly Dictionary<string, DockPanel> _panels = [];
     private bool _closingFloatingPanels;
 
-    private static string PanelsFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "panels.txt");
+    private static string PanelsFilePath => AppData.File("panels.txt");
 
     private void InitializePanels()
     {
-        AddPanel("preview", "プレビュー", PreviewSlot, PreviewSection, PreviewDetachButton);
-        AddPanel("color", "カラー", ColorSlot, ColorSection, ColorDetachButton);
-        AddPanel("shades", "色の段階", ShadeSlot, ShadeSection, ShadeDetachButton);
-        AddPanel("layers", "レイヤー", LayersSlot, LayersSection, LayersDetachButton);
-        AddPanel("palette", "パレット", PaletteSlot, PaletteSection, PaletteDetachButton);
+        AddPanel("preview", T("プレビュー", "Preview"), PreviewSlot, PreviewSection, PreviewDetachButton);
+        AddPanel("color", T("カラー", "Color"), ColorSlot, ColorSection, ColorDetachButton);
+        AddPanel("shades", T("色の段階", "Shades"), ShadeSlot, ShadeSection, ShadeDetachButton);
+        AddPanel("layers", T("レイヤー", "Layers"), LayersSlot, LayersSection, LayersDetachButton);
+        AddPanel("palette", T("パレット", "Palette"), PaletteSlot, PaletteSection, PaletteDetachButton);
         Closed += (_, _) => CloseFloatingPanels();
     }
 
@@ -147,7 +144,7 @@ public sealed partial class MainWindow
     {
         bool floating = panel.Floating is not null;
         ((FontIcon)panel.Button.Content).Glyph = floating ? DockGlyph : DetachGlyph;
-        ToolTipService.SetToolTip(panel.Button, floating ? "メイン画面に戻す" : "別ウィンドウに切り離す");
+        ToolTipService.SetToolTip(panel.Button, floating ? T("メイン画面に戻す", "Dock back to the main window") : T("別ウィンドウに切り離す", "Detach into a separate window"));
     }
 
     /// <summary>メイン画面を閉じるとき。浮いているパネルの配置を保存してから閉じる。</summary>

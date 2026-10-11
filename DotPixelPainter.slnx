@@ -4,6 +4,7 @@
       <Platform Project="x64" />
     </Project>
     <Project Path="src/DotPixelPainter.Core/DotPixelPainter.Core.csproj" />
+    <Project Path="src/DotPixelPainter.Thumbnail/DotPixelPainter.Thumbnail.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DotPixelPainter.Core.Tests/DotPixelPainter.Core.Tests.csproj" />

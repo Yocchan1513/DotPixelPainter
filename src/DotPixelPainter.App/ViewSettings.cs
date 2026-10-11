@@ -10,10 +10,7 @@ internal static class ViewSettings
 {
     private static Dictionary<string, string>? _values;
 
-    private static string FilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DotPixelPainter",
-        "view.txt");
+    private static string FilePath => AppData.File("view.txt");
 
     public static string? Get(string key) => Values.TryGetValue(key, out string? value) ? value : null;
 

@@ -19,7 +19,7 @@ public static class Program
         WinRT.ComWrappersSupport.InitializeComWrappers();
 
         // 起動時間の計測中は、毎回新しく起動する
-        bool measuring = args.Contains("--startup-log");
+        bool measuring = args.Contains("--startup-log") || args.Contains("--isolated") || args.Contains("--test-open");
         if (!measuring && RedirectToRunningInstance())
         {
             return 0;

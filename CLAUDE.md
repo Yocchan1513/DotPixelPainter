@@ -35,13 +35,26 @@ Windows 11 向けの軽量なピクセルアート（ドット絵）エディタ
 ```
 src/DotPixelPainter.Core/   描画の中心（画像・レイヤー・合成・直線など）。UI に依存しない。AOT 対応。
 src/DotPixelPainter.App/    WinUI 3 + Win2D の画面。インストール不要の単体アプリ（unpackaged, self-contained）。
+src/DotPixelPainter.Thumbnail/  エクスプローラーで .dotpix の絵を出すサムネイルの部品（COM の DLL、Native AOT）。
+                            アプリの発行時に同じフォルダへ出る。登録は「.dotpix の関連付け」と一緒（HKCU）。
 tests/DotPixelPainter.Core.Tests/  Core の単体テスト（xUnit）
 tools/measure-startup.ps1   起動時間の計測
+tools/package.ps1           配布用の zip を作る
 ```
 
 - 描画ロジックは Core に置き、テストを書く。App は表示と入力の受け渡しに徹する。
 - 色は `uint` の 0xAARRGGBB（ストレートアルファ）。表示用に乗算済み BGRA へ変換するのは App 側。
 - キャンバスは物理ピクセル単位で整数倍に拡大し、最近傍補間で描く（ドットをにじませない）。
+- サムネイルの部品はエクスプローラー（dllhost）の中で動くので、例外を外に出さない（失敗は HRESULT で返す）。
+  確かめるときは、レジストリに登録せず DLL を直接読み込んで DllGetClassObject → IInitializeWithStream → IThumbnailProvider の順に呼ぶ。
+
+## 画面の言語（日本語・英語）
+
+- 画面に出す文字は、使う場所に両方を並べて `T("日本語", "English")` と書く（Core の `Lang`。global using 済み）。
+- MainWindow.xaml の文字は `Texts.cs` にプロパティを作り、`{x:Bind local:Texts.名前}` で使う。
+- 言語は起動の最初（App のコンストラクター）に決まる。view.txt の `language`（ja / en）か、なければ Windows の表示言語。
+- `T` の両方の文字は両方とも評価されるので、`++` などの副作用を入れない（先に変数に取る）。
+- `ErrorLog.Run` / `ErrorLog.Write` の最初の引数（記録のラベル）は日本語のままでよい。
 
 ## 版の上げ方
 
@@ -83,3 +96,7 @@ UI の見た目や操作感は Claude Code だけでは確かめにくい。フ�
 - 操作の正しさは、できるだけ Core の単体テストで確かめる。
 - 「開く」「名前を付けて保存」のダイアログは PickerHost という別プロセスで動く。入力を送るときは、前面がそのダイアログであることを確かめる。
 - ファイルの読み書きは、起動時にファイルのパスを渡すと開ける（`DotPixelPainter.exe foo.dotpix`）。保存したファイルをこれで開き直して確かめるとよい。
+- 開発で起動するときは `--isolated` を付ける。起動中の利用者のアプリにファイルを渡さず、作業の控え・起動の印・前回のタブの記録にも触らない。
+- 設定や記録の場所は、環境変数 `DOTPIXELPAINTER_DATA` で別のフォルダにできる。控えや「前回は正しく終了しませんでした」の流れを試すときはこれを使い、利用者の %LOCALAPPDATA%\DotPixelPainter を乱さない。
+- `--test-open 名前` で、最初の描画のあとにダイアログを開くなどの操作をする（MainWindow.xaml.cs の起動後の準備を参照）。crash（受け止めて続けるエラー）・crash-hard（落ちるエラー）・restore（控えの復元）もある。
+- WinUI では、DispatcherQueue に後回しにした処理の中のエラーは Application.UnhandledException を通らずにアプリが落ちる。後回しにする処理は `DispatcherQueue.Post(名前, 処理)`（ErrorLog.cs）で包む。

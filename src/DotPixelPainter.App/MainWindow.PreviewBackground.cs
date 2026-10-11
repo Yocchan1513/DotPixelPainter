@@ -79,11 +79,11 @@ public sealed partial class MainWindow
         if (_previewBackgroundMenu is null)
         {
             _previewBackgroundMenu = new MenuFlyout();
-            AddBackgroundItem("市松模様", PreviewBackground.Checker);
-            AddBackgroundItem("白", PreviewBackground.White);
-            AddBackgroundItem("黒", PreviewBackground.Black);
-            AddBackgroundItem("灰色", PreviewBackground.Gray);
-            AddBackgroundItem("背景色", PreviewBackground.BackColor);
+            AddBackgroundItem(T("市松模様", "Checkerboard"), PreviewBackground.Checker);
+            AddBackgroundItem(T("白", "White"), PreviewBackground.White);
+            AddBackgroundItem(T("黒", "Black"), PreviewBackground.Black);
+            AddBackgroundItem(T("灰色", "Gray"), PreviewBackground.Gray);
+            AddBackgroundItem(T("背景色", "Background color"), PreviewBackground.BackColor);
         }
 
         // Tag に C# の列挙型を入れると Native AOT で変換に失敗するおそれがあるので、対応表で持つ

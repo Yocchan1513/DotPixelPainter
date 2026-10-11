@@ -7,7 +7,7 @@ public static class Blend
     {
         if (dst.Width != src.Width || dst.Height != src.Height)
         {
-            throw new ArgumentException("合成する画像のサイズが違います。", nameof(src));
+            throw new ArgumentException(T("合成する画像のサイズが違います。", "The images to blend have different sizes."), nameof(src));
         }
 
         int layerAlpha = (int)Math.Round(Math.Clamp(opacity, 0, 1) * 255);

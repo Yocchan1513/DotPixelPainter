@@ -72,12 +72,12 @@ public sealed partial class MainWindow
         SkinToggle.IsEnabled = canBeSkin;
         SkinToggle.IsChecked = skin;
         ToolTipService.SetToolTip(SkinToggle, canBeSkin
-            ? "Minecraft スキンとして編集（部位ガイドと 3D プレビュー）"
-            : "64×64 か 64×32 の画像で使えます");
+            ? T("Minecraft スキンとして編集（部位ガイドと 3D プレビュー）", "Edit as a Minecraft skin (part guides and 3D preview)")
+            : T("64×64 か 64×32 の画像で使えます", "Available for 64×64 or 64×32 images"));
         SkinOptions.Visibility = skin ? Visibility.Visible : Visibility.Collapsed;
         SlimToggle.IsChecked = tab?.Document.SlimArms == true;
-        PreviewTitle.Text = skin ? "3D プレビュー" : "プレビュー";
-        ToolTipService.SetToolTip(PreviewCanvas, skin ? "ドラッグで回転、ダブルクリックで元の向き" : "等倍と2倍（タイル表示では 3×3 に並べる）");
+        PreviewTitle.Text = skin ? T("3D プレビュー", "3D preview") : T("プレビュー", "Preview");
+        ToolTipService.SetToolTip(PreviewCanvas, skin ? T("ドラッグで回転、ダブルクリックで元の向き", "Drag to rotate, double-click to reset") : T("等倍と2倍（タイル表示では 3×3 に並べる）", "1x and 2x (tiled view shows 3×3)"));
         ApplyPreviewHeight();
         _skinHover = null;
         Canvas.Invalidate();
@@ -139,7 +139,7 @@ public sealed partial class MainWindow
     }
 
     private string SkinStatus() => _skinHover is { } h
-        ? $"{SkinLayout.PartName(h.Box.Part)}{(h.Box.Outer ? "（外側）" : "")}・{SkinLayout.FaceName(h.Face)}"
+        ? SkinLayout.PartName(h.Box.Part) + (h.Box.Outer ? T("（外側）", " (outer)") : "") + T("・", " · ") + SkinLayout.FaceName(h.Face)
         : "";
 
     // ---- 3D プレビュー ----

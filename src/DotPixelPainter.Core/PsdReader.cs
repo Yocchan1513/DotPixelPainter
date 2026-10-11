@@ -50,13 +50,13 @@ public static class PsdReader
         var r = new Reader(data);
         if (r.Ascii(4) != "8BPS")
         {
-            throw new FormatException("PSD ファイルではありません。");
+            throw new FormatException(T("PSD ファイルではありません。", "This is not a PSD file."));
         }
 
         int version = r.U16();
         if (version != 1)
         {
-            throw new FormatException("大きな PSD（PSB 形式）には対応していません。");
+            throw new FormatException(T("大きな PSD（PSB 形式）には対応していません。", "Large PSDs (PSB format) are not supported."));
         }
 
         r.Skip(6);
@@ -68,17 +68,17 @@ public static class PsdReader
 
         if (depth != 8)
         {
-            throw new FormatException($"{depth}bit の PSD には対応していません（8bit のみ）。Photoshop などで 8bit に変換してから開いてください。");
+            throw new FormatException(T($"{depth}bit の PSD には対応していません（8bit のみ）。Photoshop などで 8bit に変換してから開いてください。", $"{depth}-bit PSDs are not supported (8-bit only). Convert to 8-bit in Photoshop or similar first."));
         }
 
         if (colorMode is not (1 or 3))
         {
-            throw new FormatException("RGB とグレースケール以外の PSD（CMYK など）には対応していません。");
+            throw new FormatException(T("RGB とグレースケール以外の PSD（CMYK など）には対応していません。", "Only RGB and grayscale PSDs are supported (not CMYK, etc.)."));
         }
 
         if (width < 1 || height < 1 || width > PixelImage.MaxSize || height > PixelImage.MaxSize)
         {
-            throw new FormatException($"画像の大きさ（{width}×{height}）に対応していません。{PixelImage.MaxSize}×{PixelImage.MaxSize} までです。");
+            throw new FormatException(T($"画像の大きさ（{width}×{height}）に対応していません。{PixelImage.MaxSize}×{PixelImage.MaxSize} までです。", $"The image size ({width}×{height}) is not supported. Up to {PixelImage.MaxSize}×{PixelImage.MaxSize}."));
         }
 
         bool gray = colorMode == 1;
@@ -112,7 +112,7 @@ public static class PsdReader
         {
             // レイヤーがない PSD は、最後の「統合画像」を1枚のレイヤーにする
             PixelImage merged = ReadMergedImage(ref r, width, height, channelCount, gray);
-            document = PixelDocument.FromLayers(name, width, height, [new Layer("背景", merged)], 0);
+            document = PixelDocument.FromLayers(name, width, height, [new Layer(T("背景", "Background"), merged)], 0);
         }
 
         return new PsdImportResult(document, warnings);
@@ -182,7 +182,7 @@ public static class PsdReader
                 blendModes.Add(BlendModeName(rec.BlendMode));
             }
 
-            layers.Add(new Layer(rec.Name.Length > 0 ? rec.Name : $"レイヤー {layers.Count + 1}", image)
+            layers.Add(new Layer(rec.Name.Length > 0 ? rec.Name : T($"レイヤー {layers.Count + 1}", $"Layer {layers.Count + 1}"), image)
             {
                 Visible = visible[i],
                 Opacity = rec.Opacity / 255.0,
@@ -191,12 +191,15 @@ public static class PsdReader
 
         if (hadFolders)
         {
-            warnings.Add("レイヤーフォルダはまだ使えないため、フォルダを外してレイヤーだけを読み込みました。");
+            warnings.Add(T("レイヤーフォルダはまだ使えないため、フォルダを外してレイヤーだけを読み込みました。", "Layer folders are not supported yet, so only the layers were loaded without their folders."));
         }
 
         if (blendModes.Count > 0)
         {
-            warnings.Add($"描画モード（{string.Join("・", blendModes)}）は「通常」として読み込みました。見た目が変わることがあります。");
+            string modes = string.Join(T("・", ", "), blendModes);
+            warnings.Add(T(
+                $"描画モード（{modes}）は「通常」として読み込みました。見た目が変わることがあります。",
+                $"Blend modes ({modes}) were loaded as \"Normal\". The look may change."));
         }
 
         foreach (string message in unsupported)
@@ -224,7 +227,7 @@ public static class PsdReader
 
         if (r.Ascii(4) != "8BIM")
         {
-            throw new FormatException("PSD のレイヤー情報が壊れています。");
+            throw new FormatException(T("PSD のレイヤー情報が壊れています。", "The PSD layer data is damaged."));
         }
 
         rec.BlendMode = r.Ascii(4);
@@ -295,7 +298,7 @@ public static class PsdReader
                         planes[id] = ReadRle(ref r, w, h);
                         break;
                     default:
-                        unsupported.Add("ZIP 圧縮のレイヤーは読み込めないため、空のレイヤーにしました。");
+                        unsupported.Add(T("ZIP 圧縮のレイヤーは読み込めないため、空のレイヤーにしました。", "ZIP-compressed layers cannot be loaded, so they were left empty."));
                         ok = false;
                         break;
                 }
@@ -379,7 +382,7 @@ public static class PsdReader
         }
         else
         {
-            throw new FormatException("この PSD の統合画像の圧縮形式には対応していません。");
+            throw new FormatException(T("この PSD の統合画像の圧縮形式には対応していません。", "The compression of this PSD's merged image is not supported."));
         }
 
         int colors = gray ? 1 : 3;
@@ -440,13 +443,13 @@ public static class PsdReader
 
     private static string BlendModeName(string key) => key switch
     {
-        "mul " => "乗算",
-        "scrn" => "スクリーン",
-        "over" => "オーバーレイ",
-        "lddg" => "覆い焼き（リニア）",
-        "dark" => "比較（暗）",
-        "lite" => "比較（明）",
-        "pass" => "通過",
+        "mul " => T("乗算", "Multiply"),
+        "scrn" => T("スクリーン", "Screen"),
+        "over" => T("オーバーレイ", "Overlay"),
+        "lddg" => T("覆い焼き（リニア）", "Linear dodge"),
+        "dark" => T("比較（暗）", "Darken"),
+        "lite" => T("比較（明）", "Lighten"),
+        "pass" => T("通過", "Pass through"),
         _ => key.Trim(),
     };
 
@@ -461,7 +464,7 @@ public static class PsdReader
         {
             if (count < 0 || Position + count > _data.Length)
             {
-                throw new FormatException("PSD ファイルが途中で切れています。");
+                throw new FormatException(T("PSD ファイルが途中で切れています。", "The PSD file is cut off."));
             }
 
             ReadOnlySpan<byte> slice = _data.Slice(Position, count);
